@@ -225,14 +225,25 @@
         <div class="app-header">
           <div class="d-flex align-items-center">
               <button class="btn-back" onclick="window.location.href='index.html'"><i class="fa-solid fa-arrow-left"></i></button>
-              <div class="header-title"><i class="fas fa-truck-moving"></i> Transport</div>
+              <div class="header-title">
+                  <i class="fas fa-truck-moving"></i> Transport
+              </div>
           </div>
-          <div class="user-pill"><i class="fas fa-user-circle"></i> <span id="userDisplay">User</span></div>
+          <div class="d-flex align-items-center gap-2">
+              <div id="netStatus" class="badge bg-success rounded-pill d-flex align-items-center gap-1 shadow-sm" style="font-size:0.75rem; transition:0.3s;">
+                  <i class="fas fa-wifi"></i> <span>ONLINE</span>
+              </div>
+              <div class="user-pill"><i class="fas fa-user-circle"></i> <span id="userDisplay">User</span></div>
+          </div>
         </div>
 
         <div class="top-nav">
            <button class="nav-pill-btn active" id="tab-list" onclick="switchView('list')">Istoric Curse</button>
            <button class="nav-pill-btn" id="tab-add" onclick="switchView('add')">Adaugă Cursă</button>
+        </div>
+        
+        <div id="syncMessage" class="bg-warning text-dark text-center py-1 small fw-bold hidden">
+            <i class="fas fa-sync fa-spin"></i> Se sincronizează datele salvate offline...
         </div>
     </div>
 
@@ -357,24 +368,32 @@
         </div>
      </div>
   </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
+  
+    <script>
     // ==========================================
-    // CONFIGURARE OBLIGATORIE
+    // 1. CONFIGURARE
     // ==========================================
     const SCRIPT_URL = "https://script.google.com/a/macros/logissupport.ro/s/AKfycbz6Nyardm3ixuhS7jvs1Xt8Rq1pIUrtw4a8QdeLTjM9Oz5YEFgbdPAH1nD3o7Kw3sJM/exec"; 
-    
+    const OFFLINE_KEY = "transport_offline_queue";
+
     let GLOBAL_DATA = {};
     let USER_INFO = { email: "", nume: "" };
     let FILE_CACHE = {};
     let USER_TRIPS = [];
     let CURRENT_TRIP_ID = null;
 
+    // ==========================================
+    // 2. INITIALIZARE & RETEA
+    // ==========================================
     window.onload = function() {
-        showLoader("Se sincronizează...");
-        const savedUser = localStorage.getItem('pabecon_user');
+        showLoader("Se inițializează...");
         
+        // Ascultam starea retelei
+        window.addEventListener('online', updateNetworkStatus);
+        window.addEventListener('offline', updateNetworkStatus);
+        updateNetworkStatus();
+
+        const savedUser = localStorage.getItem('pabecon_user');
         if (savedUser) {
             const u = JSON.parse(savedUser);
             USER_INFO.email = u.email;
@@ -382,297 +401,122 @@
             document.getElementById('userDisplay').innerText = u.nume;
             document.getElementById('main-app').classList.remove('hidden');
             
-            // FETCH DROP-DOWNS
-            fetch(`${SCRIPT_URL}?actiune=getTransportDropdowns`)
-              .then(r => r.json())
-              .then(d => {
-                  GLOBAL_DATA = d;
-                  initApp();
-              })
-              .catch(err => {
-                  hideLoader();
-                  alert("Eroare conexiune: " + err);
-              });
+            // Incarcam drop-down-uri daca avem net, altfel folosim cache (daca am avea)
+            if(navigator.onLine) {
+                fetch(`${SCRIPT_URL}?actiune=getTransportDropdowns`)
+                  .then(r => r.json())
+                  .then(d => {
+                      GLOBAL_DATA = d;
+                      initApp();
+                  })
+                  .catch(err => {
+                      hideLoader();
+                      console.error("Eroare init:", err);
+                      // Daca pica netul la init, tot lasam aplicatia sa mearga pt adaugare offline
+                      initApp(); 
+                  });
+            } else {
+                initApp(); // Pornim direct in mod offline
+            }
         } else {
             hideLoader();
-            alert("Nu esti logat!");
+            alert("Nu esti logat! Intra prin Portal.");
             window.location.href = 'index.html';
         }
     }
 
-    function renderTrips(trips) {
-       const container = document.getElementById('trips-container');
-       container.innerHTML = '';
-       if(!trips.length) { container.innerHTML = '<div class="text-center mt-5">Nu există date.</div>'; return; }
-
-       const groupedByMonth = {};
-       trips.forEach(t => {
-          let dStr = t.DATA_TRANSPORT;
-          if(typeof dStr !== 'string') try { dStr = new Date(dStr.value).toISOString().split('T')[0]; } catch(e) { dStr = "2024-01-01"; }
-          const y = dStr.split('-')[0];
-          const m = parseInt(dStr.split('-')[1]);
-          const mNames = ["", "IANUARIE", "FEBRUARIE", "MARTIE", "APRILIE", "MAI", "IUNIE", "IULIE", "AUGUST", "SEPTEMBRIE", "OCTOMBRIE", "NOIEMBRIE", "DECEMBRIE"];
-          const key = mNames[m] + " " + y;
-          if(!groupedByMonth[key]) groupedByMonth[key] = [];
-          groupedByMonth[key].push(t);
-       });
-
-       let idx = 0;
-       for(const [monthKey, monthTrips] of Object.entries(groupedByMonth)) {
-          idx++;
-          const accordionId = `accMonth${idx}`;
-          
-          let monthHtml = `
-            <div class="accordion-item">
-               <h2 class="accordion-header">
-                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${accordionId}">
-                     <span><i class="far fa-calendar-alt me-2"></i> ${monthKey}</span>
-                     <i class="fas fa-chevron-down month-chevron"></i>
-                  </button>
-               </h2>
-               <div id="${accordionId}" class="accordion-collapse collapse" data-bs-parent="#trips-container">
-                  <div class="accordion-body">
-          `;
-
-          const groupedBySite = {};
-          monthTrips.forEach(t => {
-              const site = t.SANTIER || 'FĂRĂ ȘANTIER';
-              if(!groupedBySite[site]) groupedBySite[site] = [];
-              groupedBySite[site].push(t);
-          });
-
-          let subIdx = 0;
-          for(const [siteKey, siteTrips] of Object.entries(groupedBySite)) {
-              subIdx++;
-              const subId = `sub_${idx}_${subIdx}`;
-              
-              monthHtml += `
-                <div class="accordion mt-1">
-                    <button class="sub-accordion-btn collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${subId}" aria-expanded="false">
-                        <div class="site-name-container"><span class="text-dark fw-bold">${siteKey}</span></div>
-                        <div class="site-badge-container"><span class="site-badge">${siteTrips.length}</span></div>
-                        <div class="site-arrow-container"><i class="fas fa-chevron-down site-chev"></i></div>
-                    </button>
-                    <div id="${subId}" class="accordion-collapse collapse">
-                        <div class="pt-2">
-              `;
-
-              siteTrips.forEach(t => {
-                 let displayDate = t.DATA_TRANSPORT;
-                 // Asiguram formatarea datei
-                 try {
-                     if(typeof displayDate === 'string' && displayDate.includes('T')) {
-                         displayDate = new Date(displayDate).toLocaleDateString('ro-RO');
-                     } else if (typeof displayDate === 'object') {
-                         displayDate = new Date(displayDate.value).toLocaleDateString('ro-RO');
-                     }
-                 } catch(e) { displayDate = t.DATA_TRANSPORT; }
-                 
-                 monthHtml += `
-                    <div class="trip-card" onclick="openDetail('${t.ID}')">
-                       <div class="trip-date"><i class="far fa-calendar me-1"></i> ${displayDate}</div>
-                       <div class="trip-main">${t.SOFER || 'Nespecificat'}</div>
-                       <div class="trip-sub"><i class="fas fa-cubes me-1"></i> ${t.MATERIAL} &bull; ${t.NR_INMATRICULARE}</div>
-                       <div class="trip-amount">${t.AVIZ_1_TONE || 0} t</div>
-                    </div>
-                 `;
-              });
-              monthHtml += `</div></div></div>`; 
-          }
-          monthHtml += `</div></div></div>`;
-          container.insertAdjacentHTML('beforeend', monthHtml);
-       }
+    function updateNetworkStatus() {
+        const badge = document.getElementById('netStatus');
+        const queue = getQueue();
+        
+        if (navigator.onLine) {
+            badge.className = "badge bg-success rounded-pill d-flex align-items-center gap-1 shadow-sm";
+            badge.innerHTML = `<i class="fas fa-wifi"></i> <span>ONLINE</span>`;
+            
+            // Daca avem date in coada si avem net, incercam sincronizarea
+            if (queue.length > 0) {
+                processQueue();
+            }
+        } else {
+            badge.className = "badge bg-danger rounded-pill d-flex align-items-center gap-1 shadow-sm";
+            badge.innerHTML = `<i class="fas fa-slash"></i> <span>OFFLINE (${queue.length})</span>`;
+        }
     }
 
-    function openDetail(id) {
-       CURRENT_TRIP_ID = id;
-       const t = USER_TRIPS.find(x => x.ID === id);
-       if(!t) return;
-       const body = document.getElementById('detailsBody');
-       const detailsModal = new bootstrap.Modal(document.getElementById('detailsModal'));
-       const dVal = (v) => v || '-';
-       
-       let displayDate = t.DATA_TRANSPORT;
+    // ==========================================
+    // 3. LOGICA OFFLINE (QUEUE)
+    // ==========================================
+    function getQueue() {
+        return JSON.parse(localStorage.getItem(OFFLINE_KEY) || "[]");
+    }
+
+    function saveToQueue(payload) {
+        const queue = getQueue();
+        // Adaugam un ID temporar si timestamp
+        payload._tempId = Date.now();
+        payload._displayDate = new Date().toLocaleString();
+        queue.push(payload);
+        localStorage.setItem(OFFLINE_KEY, JSON.stringify(queue));
+        updateNetworkStatus();
+    }
+
+    async function processQueue() {
+        const queue = getQueue();
+        if (queue.length === 0) return;
+
+        // Afisam bara de sync
+        const syncMsg = document.getElementById('syncMessage');
+        syncMsg.classList.remove('hidden');
+        syncMsg.innerHTML = `<i class="fas fa-sync fa-spin"></i> Se sincronizează ${queue.length} curse...`;
+
+        // Luam primul element
+        const itemToSync = queue[0];
+
         try {
-             if(typeof displayDate === 'string' && displayDate.includes('T')) {
-                 displayDate = new Date(displayDate).toLocaleDateString('ro-RO');
-             } else if (typeof displayDate === 'object') {
-                 displayDate = new Date(displayDate.value).toLocaleDateString('ro-RO');
-             }
-         } catch(e) { displayDate = t.DATA_TRANSPORT; }
+            console.log("Syncing item...", itemToSync);
+            
+            // Trimitem la server
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(itemToSync)
+            });
+            const res = await response.json();
 
-       body.innerHTML = `
-         <div class="detail-section">
-            <div class="detail-section-title">Informații Generale</div>
-            <div class="detail-row"><span class="detail-label">DATĂ</span><span class="detail-val">${displayDate}</span></div>
-            <div class="detail-row"><span class="detail-label">ȘOFER</span><span class="detail-val">${dVal(t.SOFER)}</span></div>
-            <div class="detail-row"><span class="detail-label">AUTO</span><span class="detail-val">${dVal(t.NR_INMATRICULARE)}</span></div>
-            <div class="detail-row"><span class="detail-label">STATUS</span><span class="detail-val fw-bold ${t.STATUS_CURSA=='CONFIRMATA'?'text-success':'text-danger'}">${dVal(t.STATUS_CURSA)}</span></div>
-         </div>
-         <div class="detail-section">
-            <div class="detail-section-title">Locație & Marfă</div>
-            <div class="detail-row"><span class="detail-label">ȘANTIER</span><span class="detail-val">${dVal(t.SANTIER)}</span></div>
-            <div class="detail-row"><span class="detail-label">MATERIAL</span><span class="detail-val">${dVal(t.MATERIAL)}</span></div>
-            <div class="detail-row"><span class="detail-label">ÎNCĂRCARE</span><span class="detail-val">${dVal(t.LOC_INCARCARE)}</span></div>
-            <div class="detail-row"><span class="detail-label">DESCĂRCARE</span><span class="detail-val">${dVal(t.LOC_DESCARCARE)}</span></div>
-         </div>
-         <div class="detail-section">
-            <div class="detail-section-title">Documente</div>
-            <div class="detail-row"><span class="detail-label">AVIZ 1</span><span class="detail-val">${t.AVIZ_1_NUMAR} (${t.AVIZ_1_TONE} t)</span></div>
-            ${t.AVIZ_2 === 'DA' ? `<div class="detail-row"><span class="detail-label">AVIZ 2</span><span class="detail-val">${t.AVIZ_2_NUMAR} (${t.AVIZ_2_TONE} t)</span></div>` : ''}
-            <div class="detail-row"><span class="detail-label">CMR</span><span class="detail-val">${t.CMR}</span></div>
-            <div class="detail-row"><span class="detail-label">DELEGAȚIE</span><span class="detail-val">${t.DELEGATIE} ${t.DELEGATIE === 'DA' ? `(${t.DELEGATIE_NUMAR})` : ''}</span></div>
-         </div>
-       `;
-       detailsModal.show();
+            if (res.success) {
+                // Daca e succes, il stergem din coada
+                queue.shift(); 
+                localStorage.setItem(OFFLINE_KEY, JSON.stringify(queue));
+                
+                // Continuam cu urmatorul (recursiv)
+                if (queue.length > 0) {
+                    processQueue(); 
+                } else {
+                    // Gata tot
+                    syncMsg.classList.add('hidden');
+                    updateNetworkStatus();
+                    alert("✅ Toate datele offline au fost sincronizate!");
+                    loadHistory(); // Reimprospatam lista
+                }
+            } else {
+                console.error("Eroare server la sync:", res.message);
+                syncMsg.innerText = "Eroare la sincronizare. Se reîncearcă...";
+                setTimeout(() => syncMsg.classList.add('hidden'), 3000);
+            }
+
+        } catch (err) {
+            console.error("Eroare retea la sync:", err);
+            syncMsg.classList.add('hidden'); // Oprim sync-ul momentan
+        }
     }
 
-    function loadHistory() {
-       showLoader("Se actualizează...");
-       // FETCH GET
-       fetch(`${SCRIPT_URL}?actiune=getUserTrips&sofer=${encodeURIComponent(USER_INFO.nume)}`)
-           .then(r => r.json())
-           .then(trips => {
-              hideLoader();
-              USER_TRIPS = trips;
-              renderTrips(trips);
-           })
-           .catch(e => {
-               hideLoader();
-               console.error(e);
-               document.getElementById('trips-container').innerHTML = '<div class="text-center text-danger mt-5">Eroare incarcare date.</div>';
-           });
-    }
-    
-    function initApp() {
-       const today = new Date().toISOString().split('T')[0];
-       document.getElementById('dataTransport').value = today;
-       document.getElementById('dataFacturare').value = today;
-       document.getElementById('sofer').value = USER_INFO.nume;
-       setupAutocomplete('numarAuto', 'list-numarAuto', GLOBAL_DATA.auto || []);
-       setupAutocomplete('santier', 'list-santier', GLOBAL_DATA.santiere || []);
-       setupAutocomplete('locIncarcare', 'list-locIncarcare', GLOBAL_DATA.locatii || []);
-       setupAutocomplete('locDescarcare', 'list-locDescarcare', GLOBAL_DATA.locatii || []);
-       setupAutocomplete('material', 'list-material', GLOBAL_DATA.materiale || []);
-       loadHistory();
-    }
-
-    function switchView(view) {
-       if(view === 'list') {
-          document.getElementById('view-list').classList.remove('hidden');
-          document.getElementById('view-add').classList.add('hidden');
-          document.getElementById('tab-list').classList.add('active');
-          document.getElementById('tab-add').classList.remove('active');
-          document.getElementById('tab-add').innerText = "Adaugă Cursă";
-          loadHistory();
-       } else {
-          document.getElementById('view-list').classList.add('hidden');
-          document.getElementById('view-add').classList.remove('hidden');
-          document.getElementById('tab-list').classList.remove('active');
-          document.getElementById('tab-add').classList.add('active');
-          if (!document.getElementById('editId').value) resetForm();
-       }
-    }
-
-    function resetForm() {
-       document.getElementById('transportForm').reset();
-       document.getElementById('editId').value = ""; 
-       document.getElementById('sofer').value = USER_INFO.nume;
-       const today = new Date().toISOString().split('T')[0];
-       document.getElementById('dataTransport').value = today;
-       document.getElementById('dataFacturare').value = today;
-       FILE_CACHE = {};
-       document.querySelectorAll('.photo-box').forEach(el => el.classList.remove('has-file'));
-       document.getElementById('secAviz2').classList.add('hidden');
-       document.getElementById('secCMR').classList.add('hidden');
-       document.getElementById('secDel').classList.add('hidden');
-    }
-
-    function editCurrentTrip() {
-       const t = USER_TRIPS.find(x => x.ID === CURRENT_TRIP_ID);
-       if(!t) return;
-       const modalEl = document.getElementById('detailsModal');
-       const modal = bootstrap.Modal.getInstance(modalEl);
-       modal.hide();
-       switchView('add');
-       document.getElementById('tab-add').innerText = "Editare Cursă";
-       document.getElementById('editId').value = t.ID;
-       
-       const setVal = (id, val) => { if(document.getElementById(id)) document.getElementById(id).value = val || ''; };
-       const setCheck = (id, val) => { const chk = document.getElementById(id); chk.checked = (val === 'DA'); chk.onchange(); };
-       
-       // Handle Dates
-       let dt = t.DATA_TRANSPORT; 
-       if(typeof dt === 'object') dt = new Date(dt.value).toISOString().split('T')[0];
-       else if(dt.includes('T')) dt = dt.split('T')[0];
-       
-       let df = t.DATA_FACTURARE; 
-       if(typeof df === 'object') df = new Date(df.value).toISOString().split('T')[0];
-       else if(df.includes('T')) df = df.split('T')[0];
-
-       setVal('dataTransport', dt); setVal('dataFacturare', df);
-       setVal('sofer', t.SOFER); setVal('numarAuto', t.NR_INMATRICULARE);
-       setVal('santier', t.SANTIER); setVal('locIncarcare', t.LOC_INCARCARE);
-       setVal('locDescarcare', t.LOC_DESCARCARE); setVal('material', t.MATERIAL);
-       setVal('numarAviz1', t.AVIZ_1_NUMAR); setVal('toneAviz1', t.AVIZ_1_TONE);
-       
-       if(t.AVIZ_1_POZA) FILE_CACHE['fileAviz1'] = t.AVIZ_1_POZA;
-       if(t.TICHET_1_CANTAR_POZA) FILE_CACHE['fileTichet1'] = t.TICHET_1_CANTAR_POZA;
-       
-       setCheck('checkAviz2', t.AVIZ_2); setVal('numarAviz2', t.AVIZ_2_NUMAR); setVal('toneAviz2', t.AVIZ_2_TONE);
-       if(t.AVIZ_2_POZA) FILE_CACHE['fileAviz2'] = t.AVIZ_2_POZA;
-       
-       setCheck('checkCMR', t.CMR); if(t['CMR POZA']) FILE_CACHE['fileCMR'] = t['CMR POZA'];
-       setCheck('checkDel', t.DELEGATIE); setVal('numarDelegatie', t.DELEGATIE_NUMAR);
-       if(t.DELEGATIE_POZA) FILE_CACHE['fileDelegatie'] = t.DELEGATIE_POZA;
-       
-       if(t.STATUS_CURSA === 'NECONFIRMATA') document.getElementById('statusNeconf').checked = true;
-       else document.getElementById('statusConf').checked = true;
-       
-       for(let k in FILE_CACHE) {
-           const input = document.getElementById(k);
-           if(input && FILE_CACHE[k]) input.parentElement.classList.add('has-file');
-       }
-    }
-
-    function deleteCurrentTrip() {
-       if(!confirm("Ești sigur?")) return;
-       showLoader("Se șterge...");
-       
-       // FETCH POST DELETE
-       fetch(SCRIPT_URL, {
-           method: 'POST',
-           body: JSON.stringify({
-               actiune: 'deleteTransport',
-               id: CURRENT_TRIP_ID,
-               email: USER_INFO.email
-           })
-       })
-       .then(r => r.json())
-       .then(res => {
-          hideLoader();
-          const modal = bootstrap.Modal.getInstance(document.getElementById('detailsModal'));
-          modal.hide();
-          loadHistory();
-       })
-       .catch(e => { hideLoader(); alert("Eroare stergere: " + e); });
-    }
-
-    function showPhotos() {
-        const t = USER_TRIPS.find(x => x.ID === CURRENT_TRIP_ID);
-        let urls = [];
-        if(t.AVIZ_1_POZA) urls.push(t.AVIZ_1_POZA);
-        if(t.TICHET_1_CANTAR_POZA) urls.push(t.TICHET_1_CANTAR_POZA);
-        if(t.AVIZ_2_POZA) urls.push(t.AVIZ_2_POZA);
-        if(t['CMR POZA']) urls.push(t['CMR POZA']);
-        if(t.DELEGATIE_POZA) urls.push(t.DELEGATIE_POZA);
-        if(urls.length === 0) alert("Nu există poze.");
-        else urls.forEach(u => window.open(u, '_blank'));
-    }
+    // ==========================================
+    // 4. FUNCTIONALITATE APP
+    // ==========================================
 
     function handleSubmit(e) {
        e.preventDefault();
-       showLoader("Se salvează...");
+       
+       // Colectare Date Formular
        const formData = {
           editId: document.getElementById('editId').value,
           dataTransport: document.getElementById('dataTransport').value,
@@ -698,25 +542,310 @@
           pozaDelegatie: FILE_CACHE['fileDelegatie'] || '',
           statusCursa: document.querySelector('input[name="statusCursa"]:checked').value
        };
+
+       // Construim pachetul de date
+       const payload = {
+           actiune: 'saveTransport',
+           formData: formData,
+           email: USER_INFO.email
+       };
+
+       // LOGICA DECIZIE: ONLINE vs OFFLINE
+       if (navigator.onLine) {
+           showLoader("Se salvează online...");
+           fetch(SCRIPT_URL, {
+               method: 'POST',
+               body: JSON.stringify(payload)
+           })
+           .then(r => r.json())
+           .then(res => {
+              hideLoader();
+              if(res.success) {
+                 alert("✅ Salvat Online!");
+                 switchView('list');
+              } else { 
+                 alert("Eroare Server: " + res.message); 
+              }
+           })
+           .catch(e => {
+               // Daca pica netul fix in timpul cererii
+               hideLoader();
+               if(confirm("Eroare conexiune. Vrei să salvezi OFFLINE?")) {
+                   saveToQueue(payload);
+                   alert("💾 Salvat OFFLINE. Se va trimite automat când revine netul.");
+                   switchView('list');
+               }
+           });
+       } else {
+           // Suntem Offline
+           saveToQueue(payload);
+           alert("💾 Salvat OFFLINE. Datele sunt în siguranță în telefon.");
+           switchView('list');
+       }
+    }
+
+    // --- MANIPULARE POZE (COMPRESIE) ---
+    function triggerPhoto(id) { document.getElementById(id).click(); }
+    
+    function previewFile(input) {
+       const f = input.files[0];
+       if(!f) return;
        
-       // FETCH POST SAVE
+       // Citim fisierul si il comprimam (RESIZING)
+       const reader = new FileReader();
+       reader.onload = function(e) {
+           const img = new Image();
+           img.onload = function() {
+                // Setam dimensiuni maxime pt a nu umple memoria
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const maxDim = 1200; // Max 1200px (suficient pt avize)
+                
+                let w = img.width;
+                let h = img.height;
+                
+                if (w > h) {
+                    if (w > maxDim) { h *= maxDim / w; w = maxDim; }
+                } else {
+                    if (h > maxDim) { w *= maxDim / h; h = maxDim; }
+                }
+                
+                canvas.width = w;
+                canvas.height = h;
+                ctx.drawImage(img, 0, 0, w, h);
+                
+                // Obtinem Base64 comprimat (JPEG quality 0.7)
+                const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                
+                // Salvam doar partea de dupa virgula (fara "data:image...")
+                FILE_CACHE[input.id] = compressedBase64.split(',')[1];
+                input.parentElement.classList.add('has-file');
+           }
+           img.src = e.target.result;
+       };
+       reader.readAsDataURL(f);
+    }
+
+    // --- RESTUL FUNCTIILOR UI (Raman aproape la fel, mici ajustari pt incarcare) ---
+
+    function initApp() {
+       const today = new Date().toISOString().split('T')[0];
+       document.getElementById('dataTransport').value = today;
+       document.getElementById('dataFacturare').value = today;
+       document.getElementById('sofer').value = USER_INFO.nume;
+       setupAutocomplete('numarAuto', 'list-numarAuto', GLOBAL_DATA.auto || []);
+       setupAutocomplete('santier', 'list-santier', GLOBAL_DATA.santiere || []);
+       setupAutocomplete('locIncarcare', 'list-locIncarcare', GLOBAL_DATA.locatii || []);
+       setupAutocomplete('locDescarcare', 'list-locDescarcare', GLOBAL_DATA.locatii || []);
+       setupAutocomplete('material', 'list-material', GLOBAL_DATA.materiale || []);
+       
+       if(navigator.onLine) loadHistory();
+       else {
+           hideLoader();
+           document.getElementById('trips-container').innerHTML = '<div class="text-center mt-5 text-muted">Esti offline.<br>Istoricul nu poate fi încărcat.<br>Poți adăuga curse noi.</div>';
+       }
+    }
+
+    function loadHistory() {
+       if(!navigator.onLine) return; // Nu incercam daca n-avem net
+       
+       showLoader("Se actualizează...");
+       fetch(`${SCRIPT_URL}?actiune=getUserTrips&sofer=${encodeURIComponent(USER_INFO.nume)}`)
+           .then(r => r.json())
+           .then(trips => {
+              hideLoader();
+              USER_TRIPS = trips;
+              renderTrips(trips);
+           })
+           .catch(e => {
+               hideLoader();
+               console.error(e);
+           });
+    }
+
+    function renderTrips(trips) {
+       const container = document.getElementById('trips-container');
+       container.innerHTML = '';
+       if(!trips.length) { container.innerHTML = '<div class="text-center mt-5">Nu există date.</div>'; return; }
+
+       const groupedByMonth = {};
+       trips.forEach(t => {
+          let dStr = t.DATA_TRANSPORT;
+          if(typeof dStr !== 'string') try { dStr = new Date(dStr.value).toISOString().split('T')[0]; } catch(e) { dStr = "2024-01-01"; }
+          const y = dStr.split('-')[0];
+          const m = parseInt(dStr.split('-')[1]);
+          const mNames = ["", "IANUARIE", "FEBRUARIE", "MARTIE", "APRILIE", "MAI", "IUNIE", "IULIE", "AUGUST", "SEPTEMBRIE", "OCTOMBRIE", "NOIEMBRIE", "DECEMBRIE"];
+          const key = mNames[m] + " " + y;
+          if(!groupedByMonth[key]) groupedByMonth[key] = [];
+          groupedByMonth[key].push(t);
+       });
+
+       let idx = 0;
+       for(const [monthKey, monthTrips] of Object.entries(groupedByMonth)) {
+          idx++;
+          const accordionId = `accMonth${idx}`;
+          let monthHtml = `
+            <div class="accordion-item">
+               <h2 class="accordion-header">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${accordionId}">
+                     <span><i class="far fa-calendar-alt me-2"></i> ${monthKey}</span>
+                     <i class="fas fa-chevron-down month-chevron"></i>
+                  </button>
+               </h2>
+               <div id="${accordionId}" class="accordion-collapse collapse" data-bs-parent="#trips-container">
+                  <div class="accordion-body">
+          `;
+
+          const groupedBySite = {};
+          monthTrips.forEach(t => {
+              const site = t.SANTIER || 'FĂRĂ ȘANTIER';
+              if(!groupedBySite[site]) groupedBySite[site] = [];
+              groupedBySite[site].push(t);
+          });
+
+          let subIdx = 0;
+          for(const [siteKey, siteTrips] of Object.entries(groupedBySite)) {
+              subIdx++;
+              const subId = `sub_${idx}_${subIdx}`;
+              monthHtml += `
+                <div class="accordion mt-1">
+                    <button class="sub-accordion-btn collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${subId}" aria-expanded="false">
+                        <div class="site-name-container"><span class="text-dark fw-bold">${siteKey}</span></div>
+                        <div class="site-badge-container"><span class="site-badge">${siteTrips.length}</span></div>
+                        <div class="site-arrow-container"><i class="fas fa-chevron-down site-chev"></i></div>
+                    </button>
+                    <div id="${subId}" class="accordion-collapse collapse">
+                        <div class="pt-2">
+              `;
+              siteTrips.forEach(t => {
+                 let displayDate = t.DATA_TRANSPORT;
+                 try {
+                     if(typeof displayDate === 'string' && displayDate.includes('T')) displayDate = new Date(displayDate).toLocaleDateString('ro-RO');
+                     else if (typeof displayDate === 'object') displayDate = new Date(displayDate.value).toLocaleDateString('ro-RO');
+                 } catch(e) { displayDate = t.DATA_TRANSPORT; }
+                 
+                 monthHtml += `
+                    <div class="trip-card" onclick="openDetail('${t.ID}')">
+                       <div class="trip-date"><i class="far fa-calendar me-1"></i> ${displayDate}</div>
+                       <div class="trip-main">${t.SOFER || 'Nespecificat'}</div>
+                       <div class="trip-sub"><i class="fas fa-cubes me-1"></i> ${t.MATERIAL} &bull; ${t.NR_INMATRICULARE}</div>
+                       <div class="trip-amount">${t.AVIZ_1_TONE || 0} t</div>
+                    </div>
+                 `;
+              });
+              monthHtml += `</div></div></div>`; 
+          }
+          monthHtml += `</div></div></div>`;
+          container.insertAdjacentHTML('beforeend', monthHtml);
+       }
+    }
+
+    // --- ADMINISTRARE DETALII & UI ---
+    function openDetail(id) {
+       CURRENT_TRIP_ID = id;
+       const t = USER_TRIPS.find(x => x.ID === id);
+       if(!t) return;
+       const body = document.getElementById('detailsBody');
+       const detailsModal = new bootstrap.Modal(document.getElementById('detailsModal'));
+       const dVal = (v) => v || '-';
+       let displayDate = t.DATA_TRANSPORT;
+       try { if(typeof displayDate === 'object') displayDate = new Date(displayDate.value).toLocaleDateString('ro-RO'); 
+             else if(displayDate.includes('T')) displayDate = new Date(displayDate).toLocaleDateString('ro-RO');
+       } catch(e) {}
+
+       body.innerHTML = `
+         <div class="detail-section"><div class="detail-section-title">General</div><div class="detail-row"><span class="detail-label">DATĂ</span><span class="detail-val">${displayDate}</span></div><div class="detail-row"><span class="detail-label">ȘOFER</span><span class="detail-val">${dVal(t.SOFER)}</span></div><div class="detail-row"><span class="detail-label">AUTO</span><span class="detail-val">${dVal(t.NR_INMATRICULARE)}</span></div><div class="detail-row"><span class="detail-label">STATUS</span><span class="detail-val fw-bold ${t.STATUS_CURSA=='CONFIRMATA'?'text-success':'text-danger'}">${dVal(t.STATUS_CURSA)}</span></div></div>
+         <div class="detail-section"><div class="detail-section-title">Locație & Marfă</div><div class="detail-row"><span class="detail-label">ȘANTIER</span><span class="detail-val">${dVal(t.SANTIER)}</span></div><div class="detail-row"><span class="detail-label">MATERIAL</span><span class="detail-val">${dVal(t.MATERIAL)}</span></div><div class="detail-row"><span class="detail-label">ÎNCĂRCARE</span><span class="detail-val">${dVal(t.LOC_INCARCARE)}</span></div><div class="detail-row"><span class="detail-label">DESCĂRCARE</span><span class="detail-val">${dVal(t.LOC_DESCARCARE)}</span></div></div>
+         <div class="detail-section"><div class="detail-section-title">Documente</div><div class="detail-row"><span class="detail-label">AVIZ 1</span><span class="detail-val">${t.AVIZ_1_NUMAR} (${t.AVIZ_1_TONE} t)</span></div>${t.AVIZ_2 === 'DA' ? `<div class="detail-row"><span class="detail-label">AVIZ 2</span><span class="detail-val">${t.AVIZ_2_NUMAR} (${t.AVIZ_2_TONE} t)</span></div>` : ''}<div class="detail-row"><span class="detail-label">CMR</span><span class="detail-val">${t.CMR}</span></div><div class="detail-row"><span class="detail-label">DELEGAȚIE</span><span class="detail-val">${t.DELEGATIE}</span></div></div>
+       `;
+       detailsModal.show();
+    }
+
+    function switchView(view) {
+       if(view === 'list') {
+          document.getElementById('view-list').classList.remove('hidden');
+          document.getElementById('view-add').classList.add('hidden');
+          document.getElementById('tab-list').classList.add('active');
+          document.getElementById('tab-add').classList.remove('active');
+          document.getElementById('tab-add').innerText = "Adaugă Cursă";
+          if(navigator.onLine) loadHistory();
+       } else {
+          document.getElementById('view-list').classList.add('hidden');
+          document.getElementById('view-add').classList.remove('hidden');
+          document.getElementById('tab-list').classList.remove('active');
+          document.getElementById('tab-add').classList.add('active');
+          if (!document.getElementById('editId').value) resetForm();
+       }
+    }
+
+    function resetForm() {
+       document.getElementById('transportForm').reset();
+       document.getElementById('editId').value = ""; 
+       document.getElementById('sofer').value = USER_INFO.nume;
+       const today = new Date().toISOString().split('T')[0];
+       document.getElementById('dataTransport').value = today;
+       document.getElementById('dataFacturare').value = today;
+       FILE_CACHE = {};
+       document.querySelectorAll('.photo-box').forEach(el => el.classList.remove('has-file'));
+       document.getElementById('secAviz2').classList.add('hidden');
+       document.getElementById('secCMR').classList.add('hidden');
+       document.getElementById('secDel').classList.add('hidden');
+    }
+
+    function editCurrentTrip() {
+       if(!navigator.onLine) { alert("Editarea funcționează doar online!"); return; }
+       const t = USER_TRIPS.find(x => x.ID === CURRENT_TRIP_ID);
+       if(!t) return;
+       bootstrap.Modal.getInstance(document.getElementById('detailsModal')).hide();
+       switchView('add');
+       document.getElementById('tab-add').innerText = "Editare Cursă";
+       document.getElementById('editId').value = t.ID;
+       
+       const setVal = (id, val) => { if(document.getElementById(id)) document.getElementById(id).value = val || ''; };
+       const setCheck = (id, val) => { const chk = document.getElementById(id); chk.checked = (val === 'DA'); chk.onchange(); };
+       
+       let dt = t.DATA_TRANSPORT; if(typeof dt === 'object') dt = new Date(dt.value).toISOString().split('T')[0]; else if(dt.includes('T')) dt = dt.split('T')[0];
+       let df = t.DATA_FACTURARE; if(typeof df === 'object') df = new Date(df.value).toISOString().split('T')[0]; else if(df.includes('T')) df = df.split('T')[0];
+
+       setVal('dataTransport', dt); setVal('dataFacturare', df);
+       setVal('sofer', t.SOFER); setVal('numarAuto', t.NR_INMATRICULARE);
+       setVal('santier', t.SANTIER); setVal('locIncarcare', t.LOC_INCARCARE);
+       setVal('locDescarcare', t.LOC_DESCARCARE); setVal('material', t.MATERIAL);
+       setVal('numarAviz1', t.AVIZ_1_NUMAR); setVal('toneAviz1', t.AVIZ_1_TONE);
+       if(t.AVIZ_1_POZA) FILE_CACHE['fileAviz1'] = t.AVIZ_1_POZA;
+       if(t.TICHET_1_CANTAR_POZA) FILE_CACHE['fileTichet1'] = t.TICHET_1_CANTAR_POZA;
+       setCheck('checkAviz2', t.AVIZ_2); setVal('numarAviz2', t.AVIZ_2_NUMAR); setVal('toneAviz2', t.AVIZ_2_TONE);
+       if(t.AVIZ_2_POZA) FILE_CACHE['fileAviz2'] = t.AVIZ_2_POZA;
+       setCheck('checkCMR', t.CMR); if(t['CMR POZA']) FILE_CACHE['fileCMR'] = t['CMR POZA'];
+       setCheck('checkDel', t.DELEGATIE); setVal('numarDelegatie', t.DELEGATIE_NUMAR);
+       if(t.DELEGATIE_POZA) FILE_CACHE['fileDelegatie'] = t.DELEGATIE_POZA;
+       if(t.STATUS_CURSA === 'NECONFIRMATA') document.getElementById('statusNeconf').checked = true;
+       else document.getElementById('statusConf').checked = true;
+       for(let k in FILE_CACHE) { const input = document.getElementById(k); if(input && FILE_CACHE[k]) input.parentElement.classList.add('has-file'); }
+    }
+
+    function deleteCurrentTrip() {
+       if(!navigator.onLine) { alert("Ștergerea funcționează doar online!"); return; }
+       if(!confirm("Ești sigur?")) return;
+       showLoader("Se șterge...");
        fetch(SCRIPT_URL, {
            method: 'POST',
-           body: JSON.stringify({
-               actiune: 'saveTransport',
-               formData: formData,
-               email: USER_INFO.email
-           })
-       })
-       .then(r => r.json())
-       .then(res => {
-          hideLoader();
-          if(res.success) {
-             alert(res.message);
-             switchView('list');
-          } else { alert(res.message); }
-       })
-       .catch(e => { hideLoader(); alert("Eroare salvare: " + e); });
+           body: JSON.stringify({ actiune: 'deleteTransport', id: CURRENT_TRIP_ID, email: USER_INFO.email })
+       }).then(r => r.json()).then(res => {
+          hideLoader(); bootstrap.Modal.getInstance(document.getElementById('detailsModal')).hide(); loadHistory();
+       }).catch(e => { hideLoader(); alert("Eroare: " + e); });
+    }
+
+    function showPhotos() {
+        const t = USER_TRIPS.find(x => x.ID === CURRENT_TRIP_ID);
+        let urls = [];
+        if(t.AVIZ_1_POZA) urls.push(t.AVIZ_1_POZA);
+        if(t.TICHET_1_CANTAR_POZA) urls.push(t.TICHET_1_CANTAR_POZA);
+        if(t.AVIZ_2_POZA) urls.push(t.AVIZ_2_POZA);
+        if(t['CMR POZA']) urls.push(t['CMR POZA']);
+        if(t.DELEGATIE_POZA) urls.push(t.DELEGATIE_POZA);
+        if(urls.length === 0) alert("Nu există poze.");
+        else urls.forEach(u => window.open(u, '_blank'));
     }
 
     function setupAutocomplete(id, listId, data) {
@@ -741,20 +870,9 @@
        document.addEventListener('click', e => { if(e.target!==inp) list.style.display='none'; });
     }
 
-    function triggerPhoto(id) { document.getElementById(id).click(); }
-    function previewFile(input) {
-       const f = input.files[0];
-       if(!f) return;
-       const r = new FileReader();
-       r.onload = e => {
-          FILE_CACHE[input.id] = e.target.result.split(',')[1];
-          input.parentElement.classList.add('has-file');
-       };
-       r.readAsDataURL(f);
-    }
     function toggleDiv(id, s) { const el = document.getElementById(id); if(s) el.classList.remove('hidden'); else el.classList.add('hidden'); }
     function showLoader(t) { document.getElementById('loaderText').innerText = t; document.getElementById('loader').style.display = 'flex'; }
     function hideLoader() { document.getElementById('loader').style.display = 'none'; }
-  </script>
+</script>
 </body>
 </html>
