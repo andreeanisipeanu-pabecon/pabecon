@@ -368,8 +368,9 @@
         </div>
      </div>
   </div>
-  
-    <script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
     // ==========================================
     // 1. CONFIGURARE
     // ==========================================
@@ -412,7 +413,6 @@
                   .catch(err => {
                       hideLoader();
                       console.error("Eroare init:", err);
-                      // Daca pica netul la init, tot lasam aplicatia sa mearga pt adaugare offline
                       initApp(); 
                   });
             } else {
@@ -432,11 +432,7 @@
         if (navigator.onLine) {
             badge.className = "badge bg-success rounded-pill d-flex align-items-center gap-1 shadow-sm";
             badge.innerHTML = `<i class="fas fa-wifi"></i> <span>ONLINE</span>`;
-            
-            // Daca avem date in coada si avem net, incercam sincronizarea
-            if (queue.length > 0) {
-                processQueue();
-            }
+            if (queue.length > 0) processQueue();
         } else {
             badge.className = "badge bg-danger rounded-pill d-flex align-items-center gap-1 shadow-sm";
             badge.innerHTML = `<i class="fas fa-slash"></i> <span>OFFLINE (${queue.length})</span>`;
@@ -446,13 +442,10 @@
     // ==========================================
     // 3. LOGICA OFFLINE (QUEUE)
     // ==========================================
-    function getQueue() {
-        return JSON.parse(localStorage.getItem(OFFLINE_KEY) || "[]");
-    }
+    function getQueue() { return JSON.parse(localStorage.getItem(OFFLINE_KEY) || "[]"); }
 
     function saveToQueue(payload) {
         const queue = getQueue();
-        // Adaugam un ID temporar si timestamp
         payload._tempId = Date.now();
         payload._displayDate = new Date().toLocaleString();
         queue.push(payload);
@@ -464,18 +457,14 @@
         const queue = getQueue();
         if (queue.length === 0) return;
 
-        // Afisam bara de sync
         const syncMsg = document.getElementById('syncMessage');
         syncMsg.classList.remove('hidden');
         syncMsg.innerHTML = `<i class="fas fa-sync fa-spin"></i> Se sincronizează ${queue.length} curse...`;
 
-        // Luam primul element
         const itemToSync = queue[0];
 
         try {
             console.log("Syncing item...", itemToSync);
-            
-            // Trimitem la server
             const response = await fetch(SCRIPT_URL, {
                 method: 'POST',
                 body: JSON.stringify(itemToSync)
@@ -483,29 +472,24 @@
             const res = await response.json();
 
             if (res.success) {
-                // Daca e succes, il stergem din coada
                 queue.shift(); 
                 localStorage.setItem(OFFLINE_KEY, JSON.stringify(queue));
-                
-                // Continuam cu urmatorul (recursiv)
                 if (queue.length > 0) {
                     processQueue(); 
                 } else {
-                    // Gata tot
                     syncMsg.classList.add('hidden');
                     updateNetworkStatus();
                     alert("✅ Toate datele offline au fost sincronizate!");
-                    loadHistory(); // Reimprospatam lista
+                    loadHistory();
                 }
             } else {
                 console.error("Eroare server la sync:", res.message);
                 syncMsg.innerText = "Eroare la sincronizare. Se reîncearcă...";
                 setTimeout(() => syncMsg.classList.add('hidden'), 3000);
             }
-
         } catch (err) {
             console.error("Eroare retea la sync:", err);
-            syncMsg.classList.add('hidden'); // Oprim sync-ul momentan
+            syncMsg.classList.add('hidden');
         }
     }
 
@@ -515,8 +499,6 @@
 
     function handleSubmit(e) {
        e.preventDefault();
-       
-       // Colectare Date Formular
        const formData = {
           editId: document.getElementById('editId').value,
           dataTransport: document.getElementById('dataTransport').value,
@@ -543,14 +525,12 @@
           statusCursa: document.querySelector('input[name="statusCursa"]:checked').value
        };
 
-       // Construim pachetul de date
        const payload = {
            actiune: 'saveTransport',
            formData: formData,
            email: USER_INFO.email
        };
 
-       // LOGICA DECIZIE: ONLINE vs OFFLINE
        if (navigator.onLine) {
            showLoader("Se salvează online...");
            fetch(SCRIPT_URL, {
@@ -563,12 +543,9 @@
               if(res.success) {
                  alert("✅ Salvat Online!");
                  switchView('list');
-              } else { 
-                 alert("Eroare Server: " + res.message); 
-              }
+              } else { alert("Eroare Server: " + res.message); }
            })
            .catch(e => {
-               // Daca pica netul fix in timpul cererii
                hideLoader();
                if(confirm("Eroare conexiune. Vrei să salvezi OFFLINE?")) {
                    saveToQueue(payload);
@@ -577,7 +554,6 @@
                }
            });
        } else {
-           // Suntem Offline
            saveToQueue(payload);
            alert("💾 Salvat OFFLINE. Datele sunt în siguranță în telefon.");
            switchView('list');
@@ -590,35 +566,19 @@
     function previewFile(input) {
        const f = input.files[0];
        if(!f) return;
-       
-       // Citim fisierul si il comprimam (RESIZING)
        const reader = new FileReader();
        reader.onload = function(e) {
            const img = new Image();
            img.onload = function() {
-                // Setam dimensiuni maxime pt a nu umple memoria
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
-                const maxDim = 1200; // Max 1200px (suficient pt avize)
-                
-                let w = img.width;
-                let h = img.height;
-                
-                if (w > h) {
-                    if (w > maxDim) { h *= maxDim / w; w = maxDim; }
-                } else {
-                    if (h > maxDim) { w *= maxDim / h; h = maxDim; }
-                }
-                
-                canvas.width = w;
-                canvas.height = h;
+                const maxDim = 1200; 
+                let w = img.width; let h = img.height;
+                if (w > h) { if (w > maxDim) { h *= maxDim / w; w = maxDim; } } 
+                else { if (h > maxDim) { w *= maxDim / h; h = maxDim; } }
+                canvas.width = w; canvas.height = h;
                 ctx.drawImage(img, 0, 0, w, h);
-                
-                // Obtinem Base64 comprimat (JPEG quality 0.7)
-                const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
-                
-                // Salvam doar partea de dupa virgula (fara "data:image...")
-                FILE_CACHE[input.id] = compressedBase64.split(',')[1];
+                FILE_CACHE[input.id] = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
                 input.parentElement.classList.add('has-file');
            }
            img.src = e.target.result;
@@ -626,7 +586,7 @@
        reader.readAsDataURL(f);
     }
 
-    // --- RESTUL FUNCTIILOR UI (Raman aproape la fel, mici ajustari pt incarcare) ---
+    // --- RESTUL FUNCTIILOR UI ---
 
     function initApp() {
        const today = new Date().toISOString().split('T')[0];
@@ -638,7 +598,6 @@
        setupAutocomplete('locIncarcare', 'list-locIncarcare', GLOBAL_DATA.locatii || []);
        setupAutocomplete('locDescarcare', 'list-locDescarcare', GLOBAL_DATA.locatii || []);
        setupAutocomplete('material', 'list-material', GLOBAL_DATA.materiale || []);
-       
        if(navigator.onLine) loadHistory();
        else {
            hideLoader();
@@ -647,8 +606,7 @@
     }
 
     function loadHistory() {
-       if(!navigator.onLine) return; // Nu incercam daca n-avem net
-       
+       if(!navigator.onLine) return; 
        showLoader("Se actualizează...");
        fetch(`${SCRIPT_URL}?actiune=getUserTrips&sofer=${encodeURIComponent(USER_INFO.nume)}`)
            .then(r => r.json())
@@ -657,31 +615,25 @@
               USER_TRIPS = trips;
               renderTrips(trips);
            })
-           .catch(e => {
-               hideLoader();
-               console.error(e);
-           });
+           .catch(e => { hideLoader(); console.error(e); });
     }
 
+    // --- FUNCTIA REPARATA PENTRU LISTA (DOM-BASED) ---
     function renderTrips(trips) {
        const container = document.getElementById('trips-container');
        container.innerHTML = '';
-       
        if(!trips || trips.length === 0) { 
            container.innerHTML = '<div class="text-center mt-5 text-muted">Nu există date.</div>'; 
            return; 
        }
 
-       // 1. Grupăm datele
        const groupedByMonth = {};
        trips.forEach(t => {
           let dStr = t.DATA_TRANSPORT;
-          // Tratare robusta a datelor (String vs Object BigQuery)
           try {
              if(typeof dStr === 'object' && dStr.value) dStr = new Date(dStr.value).toISOString().split('T')[0];
              else if(typeof dStr === 'string' && dStr.includes('T')) dStr = dStr.split('T')[0];
           } catch(e) { dStr = "2024-01-01"; }
-          
           if (!dStr) dStr = "2024-01-01";
 
           const y = dStr.split('-')[0];
@@ -693,13 +645,10 @@
           groupedByMonth[key].push(t);
        });
 
-       // 2. Construim HTML-ul (Metoda DOM - Sigură)
        let idx = 0;
        for(const [monthKey, monthTrips] of Object.entries(groupedByMonth)) {
           idx++;
           const accordionId = `accMonth${idx}`;
-          
-          // Creăm elementul pentru LUNA
           const monthItem = document.createElement('div');
           monthItem.className = 'accordion-item';
           monthItem.innerHTML = `
@@ -714,10 +663,8 @@
              </div>
           `;
           container.appendChild(monthItem);
-          
           const monthBody = monthItem.querySelector(`#body${accordionId}`);
 
-          // Grupăm pe Șantiere în interiorul lunii
           const groupedBySite = {};
           monthTrips.forEach(t => {
               const site = t.SANTIER || 'FĂRĂ ȘANTIER';
@@ -729,8 +676,6 @@
           for(const [siteKey, siteTrips] of Object.entries(groupedBySite)) {
               subIdx++;
               const subId = `sub_${idx}_${subIdx}`;
-              
-              // Creăm elementul pentru ȘANTIER
               const siteAcc = document.createElement('div');
               siteAcc.className = 'accordion mt-1';
               siteAcc.innerHTML = `
@@ -744,10 +689,8 @@
                   </div>
               `;
               monthBody.appendChild(siteAcc);
-              
               const listDiv = siteAcc.querySelector(`#list${subId}`);
 
-              // Adăugăm CURSELE
               siteTrips.forEach(t => {
                  let displayDate = t.DATA_TRANSPORT;
                  try {
@@ -770,7 +713,6 @@
        }
     }
 
-    // --- ADMINISTRARE DETALII & UI ---
     function openDetail(id) {
        CURRENT_TRIP_ID = id;
        const t = USER_TRIPS.find(x => x.ID === id);
@@ -903,6 +845,6 @@
     function toggleDiv(id, s) { const el = document.getElementById(id); if(s) el.classList.remove('hidden'); else el.classList.add('hidden'); }
     function showLoader(t) { document.getElementById('loaderText').innerText = t; document.getElementById('loader').style.display = 'flex'; }
     function hideLoader() { document.getElementById('loader').style.display = 'none'; }
-</script>
+  </script>
 </body>
 </html>
