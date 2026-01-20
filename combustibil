@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Jurnal Combustibil</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { 
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            --bg-light: #f3f4f6;
+            --text-dark: #2d3748;
+            --accent-color: #764ba2;
+        }
+        
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            color: var(--text-dark);
+            background-color: var(--bg-light);
+            padding-top: 140px; 
+            padding-bottom: 80px; 
+            margin: 0;
+        }
+
+        /* HEADER FIX */
+        .fixed-header-wrapper {
+            position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
+            background-color: var(--bg-light); 
+        }
+
+        .app-header { 
+            background: var(--primary-gradient); color: white; padding: 15px 20px 50px; 
+            border-radius: 0 0 30px 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); 
+            display: flex; justify-content: space-between; align-items: center; 
+        }
+        .header-title { font-weight: 700; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
+        .user-pill { background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; font-size: 0.85rem; display: flex; align-items: center; gap: 5px; backdrop-filter: blur(5px); }
+
+        .top-nav { display: flex; justify-content: center; gap: 10px; margin-top: -25px; margin-bottom: 10px; position: relative; padding: 0 15px; }
+        .nav-pill-btn { border: none; padding: 12px 0; border-radius: 50px; font-weight: 600; font-size: 0.9rem; box-shadow: 0 4px 10px rgba(0,0,0,0.08); transition: 0.3s; flex: 1; text-align: center; max-width: 200px; cursor: pointer; }
+        .nav-pill-btn.active { background: #2d3748; color: white; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.15); }
+        .nav-pill-btn:not(.active) { background: white; color: #4a5568; }
+        .nav-pill-btn:not(.active):active { transform: scale(0.95); background: #f8f9fa; }
+
+        /* LIST & CARDURI */
+        .accordion-item { border: none; background: transparent; margin-bottom: 12px; }
+        .accordion-button { border-radius: 15px !important; margin-bottom: 5px; font-weight: 600; color: #4a5568; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
+        .accordion-button:not(.collapsed) { color: #764ba2; background: #f3e8ff; }
+        .accordion-body { padding: 5px 0px; }
+
+        .bon-row-container { background: white; padding: 15px; margin-bottom: 10px; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); cursor: pointer; transition: 0.2s; border-left: 5px solid #764ba2; }
+        .bon-row-container:active { transform: scale(0.98); background: #fafafa; }
+        .text-date-blue { color: #764ba2; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; }
+
+        /* FORMULAR & UPLOAD */
+        .form-container-width { max-width: 600px; margin: 0 auto; }
+        .form-control, .form-select { border-radius: 12px; padding: 12px; border: 1px solid #d1d9e6; background-color: #fff; }
+        .form-control:focus { border-color: #764ba2; box-shadow: 0 0 0 4px rgba(118, 75, 162, 0.1); }
+        .form-section { margin-top: 30px; margin-bottom: 15px; border-left: 5px solid #764ba2; padding-left: 15px; }
+        .form-section h4 { font-weight: 700; font-size: 1.1rem; color: #2d3748; margin: 0; }
+
+        /* UPLOAD BUTTON */
+        .upload-btn-large {
+            background: var(--primary-gradient);
+            color: white; border: none; padding: 20px 30px;
+            border-radius: 50px; font-weight: 700; font-size: 1.1rem;
+            box-shadow: 0 10px 20px rgba(118, 75, 162, 0.3);
+            cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+            width: 100%; text-align: center;
+        }
+        
+        /* BUTON PLUTITOR POZA */
+        .floating-img-btn { 
+            position: fixed; top: 150px; right: 20px; z-index: 1100; 
+            background: linear-gradient(45deg, #FF512F, #DD2476); 
+            color: white; padding: 10px 22px; border-radius: 30px; 
+            font-weight: 700; border: 2px solid white; cursor: pointer; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2); 
+            /* Ascuns default prin clasa hidden */
+        }
+
+        /* LOADER */
+        #loader { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(255,255,255,0.9); z-index: 9999; 
+            display: flex; justify-content: center; align-items: center; flex-direction: column; 
+        }
+        
+        /* HELPER CLASS - IMPORTANT */
+        .hidden { display: none !important; }
+        
+        /* DETAILS MODAL */
+        .detail-label { font-size: 0.75rem; color: #6c757d; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .detail-value { font-size: 0.95rem; font-weight: 500; color: #212529; border-bottom: 1px solid #f0f0f0; padding-bottom: 4px; margin-bottom: 8px; }
+
+        /* Utils */
+        .btn-refresh-custom { background-color: #e2e8f0; color: #4a5568; border: none; font-weight: 600; font-size: 0.85rem; margin-top: 20px; margin-bottom: 10px; padding-right: 5px; transition: 0.2s; }
+        .btn-refresh-custom:hover { background-color: #cbd5e0; color: #2d3748; }
+        .custom-dropdown-wrapper { position: relative; }
+        .custom-dropdown-list { position: absolute; top: 100%; left: 0; right: 0; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); max-height: 250px; overflow-y: auto; z-index: 1050; display: none; border: 1px solid #e2e8f0; margin-top: 5px; }
+        .custom-dropdown-item { padding: 12px 15px; cursor: pointer; border-bottom: 1px solid #f8f9fa; font-size: 0.9rem; color: #4a5568; }
+        .custom-dropdown-item:hover { background-color: #f0f4f8; color: #764ba2; font-weight: 500; }
+        .input-icon-right { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: #a0aec0; pointer-events: none; }
+        
+        #imgModal .modal-body { padding: 0; background: black; display: flex; align-items: center; justify-content: center; height: 100%; }
+        #imgModal img { max-width: 100%; max-height: 100vh; object-fit: contain; }
+
+        /* Back Button Style */
+        .btn-back { background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 50px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-right: 10px; cursor: pointer; transition: 0.2s; }
+        .btn-back:hover { background: rgba(255,255,255,0.3); }
+    </style>
+</head>
+<body>
+
+    <button id="stickyImgBtn" class="floating-img-btn hidden" type="button" onclick="openFullImage()">
+        <i class="fa-solid fa-eye me-2"></i> VEZI BON
+    </button>
+
+    <div id="loader">
+        <div class="spinner-border" style="color:#764ba2;" role="status"></div>
+        <div class="mt-2 fw-bold text-muted" id="loaderText">Se inițializează...</div>
+    </div>
+
+    <div id="main-app" class="hidden">
+        
+        <div class="fixed-header-wrapper">
+            <div class="app-header">
+                <div class="d-flex align-items-center">
+                    <button class="btn-back" onclick="window.location.href='index.html'"><i class="fa-solid fa-arrow-left"></i></button>
+                    <div class="header-title"><i class="fa-solid fa-gas-pump"></i> Jurnal</div>
+                </div>
+                <div class="user-pill"><i class="fa-solid fa-user-circle fa-lg"></i> <span id="displayUserName">User</span></div>
+            </div>
+
+            <div class="top-nav">
+                <button class="nav-pill-btn active" id="tab-list" onclick="switchView('list')">Istoric</button>
+                <button class="nav-pill-btn" id="tab-add" onclick="openAddScreen()">Adaugă</button>
+            </div>
+        </div>
+
+        <div class="container pb-5">
+            
+            <div id="view-list">
+                <div class="text-end mb-3">
+                     <button type="button" class="btn btn-sm rounded-pill btn-refresh-custom" onclick="refreshDashboard()">
+                        <i class="fa-solid fa-sync me-1"></i> Actualizează
+                     </button>
+                </div>
+                <div class="accordion" id="monthAccordion"></div>
+                <div id="no-data-state" class="text-center py-5 text-muted hidden"><i class="fa-regular fa-folder-open fa-3x mb-3 opacity-50"></i><p>Nu există date.</p></div>
+            </div>
+
+            <div id="view-add" class="hidden pb-5">
+                
+                <div id="uploadStep" class="text-center py-5 mt-5">
+                     <label for="cameraInput" class="upload-btn-large">
+                        <i class="fa-solid fa-camera"></i> SCANEAZĂ BONUL
+                     </label>
+                     <input type="file" id="cameraInput" accept="image/*" style="display:none" onchange="processImage()">
+                     <div class="mt-5"><button type="button" class="btn btn-link text-secondary text-decoration-none fw-bold" onclick="skipUpload()">Completează Manual</button></div>
+                </div>
+
+                <div id="formStep" class="hidden form-container-width">
+                    <img id="hiddenPreviewImg" src="" class="hidden">
+                    
+                    <form id="bonForm">
+                        <input type="hidden" id="poza_url_drive"><input type="hidden" id="bonIdEdit"><input type="hidden" id="formMode">
+                        <div class="form-section"><i class="fa-regular fa-calendar"></i><h4>Date Generale</h4></div>
+                        <div class="mb-3"><label class="text-muted small fw-bold ms-1">DATA</label><input type="date" class="form-control fw-bold" id="date"></div>
+                        <div class="mb-3"><label class="text-muted small fw-bold ms-1">ȘOFER</label><div class="custom-dropdown-wrapper"><input type="text" class="form-control fw-bold" id="soferInput" placeholder="Caută..." autocomplete="off"><i class="fa-solid fa-chevron-down input-icon-right"></i><div id="soferList" class="custom-dropdown-list"></div></div></div>
+                        <div class="mb-3"><label class="text-muted small fw-bold ms-1">AUTO</label><div class="custom-dropdown-wrapper"><input type="text" class="form-control fw-bold" id="autoInput" placeholder="Caută..." autocomplete="off"><i class="fa-solid fa-chevron-down input-icon-right"></i><div id="autoList" class="custom-dropdown-list"></div></div></div>
+
+                        <div class="form-section"><i class="fa-regular fa-credit-card"></i><h4>Date Card</h4></div>
+                        <div class="mb-3"><label class="text-muted small fw-bold">POSESOR</label><input type="text" class="form-control" id="posesorCard" readonly style="background:#e9ecef;"></div>
+                        <div class="mb-3"><label class="text-muted small fw-bold">FURNIZOR</label><input type="text" class="form-control fw-bold text-primary" id="furnizorCardDisplay"></div>
+                        <div class="mb-3"><label class="text-muted small fw-bold">DENUMIRE (NR)</label><input type="text" class="form-control" id="denumireCard" readonly style="background:#e9ecef;"></div>
+                        
+                        <div class="form-section"><i class="fa-solid fa-receipt"></i><h4>Detalii Bon</h4></div>
+                        <div class="mb-3"><label class="text-muted small fw-bold">NR. BON</label><input type="number" class="form-control" id="receipt_number"></div>
+                        <div class="mb-3"><label class="text-muted small fw-bold">STAȚIE</label><input type="text" class="form-control" id="station"></div>
+                        <div class="mb-3"><label class="text-muted small fw-bold">FURNIZOR</label><input type="text" class="form-control fw-bold" id="supplier"></div>
+                        <div class="mb-3"><label class="text-muted small fw-bold">PRODUS</label><input type="text" class="form-control" id="product"></div>
+                        <div class="mb-3"><label class="text-muted small fw-bold">PREȚ / LITRU</label><input type="number" step="0.01" class="form-control fw-bold" id="price_per_liter"></div>
+                        <div class="mb-3"><label class="text-muted small fw-bold">CANTITATE (L)</label><input type="number" step="0.01" class="form-control fw-bold" id="quantity"></div>
+                        
+                        <div class="mt-4 mb-5 card border-0 shadow-sm rounded-4 bg-white p-3 text-center"><label class="fw-bold text-muted small d-block mb-1">TOTAL DE PLATĂ</label><input type="number" step="0.01" class="form-control fw-bold border-0 text-primary text-center fs-1 bg-transparent" id="total_with_vat"><small class="text-primary fw-bold">RON</small></div>
+                    </form>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <button type="button" class="btn btn-light rounded-pill px-4" onclick="switchView('list')">Anulează</button>
+                        <button type="button" class="btn btn-primary rounded-pill px-5 fw-bold shadow" onclick="submitData()" style="background: var(--primary-gradient); border:none;">SALVEAZĂ</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="detailsModal" tabindex="-1">
+        <div class="modal-dialog modal-fullscreen-md-down modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow">
+                <div class="modal-header border-0 bg-light rounded-top-4">
+                    <h5 class="modal-title fw-bold text-dark">Vizualizare Bon</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body bg-white pt-4 px-4" id="detailsBody"></div>
+                <div class="modal-footer border-0 bg-light rounded-bottom-4 justify-content-between">
+                    <button type="button" class="btn btn-outline-danger border-0 fw-bold" onclick="confirmDelete()"><i class="fa-solid fa-trash me-2"></i>Șterge</button>
+                    <div>
+                        <a id="detailLinkImg" href="#" target="_blank" class="btn btn-light rounded-pill me-2 border hidden"><i class="fa-solid fa-eye text-secondary"></i> Poză</a>
+                        <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold" onclick="openEditFromDetails()"><i class="fa-solid fa-pen me-2"></i> Editează</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="imgModal" tabindex="-1"><div class="modal-dialog modal-fullscreen"><div class="modal-content bg-black"><button type="button" class="position-absolute top-0 end-0 m-3 btn btn-light rounded-circle shadow" data-bs-dismiss="modal" style="z-index:1070; width:40px; height:40px;"><i class="fa-solid fa-times"></i></button><div class="modal-body p-0 d-flex align-items-center justify-content-center" onclick="imgModal.hide()"><img id="fullSizeImg" src=""></div></div></div></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ==========================================
+        // CONFIGURARE OBLIGATORIE
+        // ==========================================
+        const SCRIPT_URL = "https://script.google.com/a/macros/logissupport.ro/s/AKfycbz6Nyardm3ixuhS7jvs1Xt8Rq1pIUrtw4a8QdeLTjM9Oz5YEFgbdPAH1nD3o7Kw3sJM/exec"; 
+        
+        const detailsModal = new bootstrap.Modal(document.getElementById('detailsModal'));
+        const imgModal = new bootstrap.Modal(document.getElementById('imgModal'));
+        
+        let CURRENT_USER_EMAIL = "";
+        let CURRENT_USER_NAME = "";
+        let SELECTED_BON = null;
+        let GLOBAL_SOFERI = [];
+        let GLOBAL_AUTO = [];
+
+        // 1. INITIALIZARE
+        window.onload = function() {
+            showLoader("Se inițializează...");
+            const savedUser = localStorage.getItem('pabecon_user');
+            
+            if (savedUser) {
+                const u = JSON.parse(savedUser);
+                CURRENT_USER_EMAIL = u.email;
+                CURRENT_USER_NAME = u.nume;
+                document.getElementById('displayUserName').innerText = u.nume;
+                document.getElementById('main-app').classList.remove('hidden');
+                
+                // Fetch Nomenclatoare
+                fetch(`${SCRIPT_URL}?actiune=getNomenclatoare`)
+                    .then(r => r.json())
+                    .then(d => {
+                        populateLists(d);
+                        refreshDashboard();
+                    })
+                    .catch(err => handleError("Eroare conexiune: " + err));
+            } else {
+                hideLoader();
+                alert("Te rugăm să te loghezi prin Portal.");
+                window.location.href = 'index.html';
+            }
+        };
+
+        function switchView(view) {
+            const listDiv = document.getElementById('view-list');
+            const addDiv = document.getElementById('view-add');
+            const tabList = document.getElementById('tab-list');
+            const tabAdd = document.getElementById('tab-add');
+            const stickyBtn = document.getElementById('stickyImgBtn');
+
+            if (view === 'list') {
+                listDiv.classList.remove('hidden');
+                addDiv.classList.add('hidden');
+                
+                tabList.classList.add('active');
+                tabAdd.classList.remove('active');
+                tabAdd.innerText = "Adaugă";
+                stickyBtn.classList.add('hidden');
+                
+                refreshDashboard();
+            } else {
+                listDiv.classList.add('hidden');
+                addDiv.classList.remove('hidden');
+                
+                tabList.classList.remove('active');
+                tabAdd.classList.add('active');
+            }
+        }
+
+        // --- ADAUGARE ---
+        function openAddScreen() {
+            resetForm(); 
+            document.getElementById('formMode').value = 'INSERT'; 
+            document.getElementById('tab-add').innerText = 'Adaugă Bon';
+            
+            document.getElementById('uploadStep').classList.remove('hidden');
+            document.getElementById('formStep').classList.add('hidden');
+            document.getElementById('hiddenPreviewImg').src = "";
+            document.getElementById('stickyImgBtn').classList.add('hidden');
+            
+            if(CURRENT_USER_NAME) document.getElementById('soferInput').value = CURRENT_USER_NAME;
+            switchView('add');
+        }
+
+        // --- EDITARE ---
+        function openEditFromDetails() {
+            if(!SELECTED_BON) return;
+            detailsModal.hide();
+            
+            const dataObj = SELECTED_BON;
+            resetForm(); 
+            document.getElementById('formMode').value = 'UPDATE'; 
+            document.getElementById('tab-add').innerText = 'Editează Bon';
+            
+            document.getElementById('uploadStep').classList.add('hidden');
+            document.getElementById('formStep').classList.remove('hidden');
+            
+            document.getElementById('bonIdEdit').value = dataObj.id; 
+            document.getElementById('poza_url_drive').value = dataObj.linkPoza; 
+            
+            if(dataObj.linkPoza) {
+                document.getElementById('hiddenPreviewImg').src = dataObj.linkPoza; 
+                document.getElementById('stickyImgBtn').classList.remove('hidden');
+            } else {
+                document.getElementById('stickyImgBtn').classList.add('hidden');
+            }
+
+            document.getElementById('date').value = dataObj.data; 
+            document.getElementById('soferInput').value = dataObj.sofer; 
+            document.getElementById('autoInput').value = dataObj.auto; 
+            document.getElementById('posesorCard').value = dataObj.posesor_card; 
+            document.getElementById('furnizorCardDisplay').value = dataObj.furnizor_card; 
+            document.getElementById('denumireCard').value = dataObj.card; 
+            document.getElementById('receipt_number').value = dataObj.nr_bon; 
+            document.getElementById('station').value = dataObj.statie; 
+            document.getElementById('supplier').value = dataObj.furnizor; 
+            document.getElementById('product').value = dataObj.produs; 
+            document.getElementById('price_per_liter').value = dataObj.pret; 
+            document.getElementById('quantity').value = dataObj.litri; 
+            document.getElementById('total_with_vat').value = dataObj.suma;
+            
+            switchView('add');
+        }
+
+        function skipUpload() { 
+            document.getElementById('uploadStep').classList.add('hidden'); 
+            document.getElementById('formStep').classList.remove('hidden'); 
+            document.getElementById('stickyImgBtn').classList.add('hidden');
+        }
+        
+        function processImage() {
+            const input = document.getElementById('cameraInput'); 
+            if (input.files.length === 0) return; 
+            const file = input.files[0];
+            
+            showLoader("Se analizează cu AI...");
+            
+            const reader = new FileReader(); 
+            reader.onload = (e) => { 
+                document.getElementById('hiddenPreviewImg').src = e.target.result; 
+                document.getElementById('stickyImgBtn').classList.remove('hidden');
+            }; 
+            reader.readAsDataURL(file);
+            
+            const r2 = new FileReader(); 
+            r2.onload = function(evt) { 
+                const img = new Image(); 
+                img.onload = function() { 
+                    const c = document.createElement('canvas'); const ctx = c.getContext('2d'); const max = 1600; 
+                    let w=img.width, h=img.height; 
+                    if(w>h){if(w>max){h*=max/w;w=max}}else{if(h>max){w*=max/h;h=max}} 
+                    c.width=w;c.height=h; 
+                    ctx.drawImage(img,0,0,w,h); 
+                    const b64 = c.toDataURL('image/jpeg',0.85).split(',')[1]; 
+                    
+                    // --- FETCH POST PENTRU ANALIZA ---
+                    fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            actiune: 'analizaBon',
+                            image: b64,
+                            filename: file.name
+                        })
+                    })
+                    .then(r => r.json())
+                    .then(fillForm)
+                    .catch(e => handleError(e));
+                }; 
+                img.src = evt.target.result; 
+            }; 
+            r2.readAsDataURL(file);
+        }
+
+        function fillForm(res) {
+            hideLoader(); 
+            if(!res.success) { alert("Eroare AI: " + res.error); skipUpload(); return; }
+            
+            const d = res.data; 
+            skipUpload(); 
+            document.getElementById('stickyImgBtn').classList.remove('hidden');
+            
+            if(d.poza_url) document.getElementById('poza_url_drive').value = d.poza_url;
+            if(d.date) document.getElementById('date').value = d.date;
+            if(d.receipt_number) document.getElementById('receipt_number').value = d.receipt_number;
+            if(d.supplier) document.getElementById('supplier').value = d.supplier;
+            if(d.station) document.getElementById('station').value = d.station;
+            if(d.product) document.getElementById('product').value = d.product;
+            if(d.quantity) document.getElementById('quantity').value = d.quantity;
+            if(d.price_per_liter) document.getElementById('price_per_liter').value = d.price_per_liter;
+            if(d.total_with_vat) document.getElementById('total_with_vat').value = d.total_with_vat;
+            if(d.posesor_card) document.getElementById('posesorCard').value = d.posesor_card;
+            if(d.denumire_card) document.getElementById('denumireCard').value = d.denumire_card;
+            if(d.furnizor_card) document.getElementById('furnizorCardDisplay').value = d.furnizor_card ? d.furnizor_card.toUpperCase() : '';
+            if(CURRENT_USER_NAME) document.getElementById('soferInput').value = CURRENT_USER_NAME;
+        }
+
+        function openFullImage() { 
+            const s = document.getElementById('hiddenPreviewImg').src; 
+            if(s){ document.getElementById('fullSizeImg').src=s; imgModal.show(); } 
+        }
+
+        function submitData() {
+            const data = { poza_url: document.getElementById('poza_url_drive').value, date: document.getElementById('date').value, sofer: document.getElementById('soferInput').value, nr_auto: document.getElementById('autoInput').value, posesor_card: document.getElementById('posesorCard').value, furnizor_card: document.getElementById('furnizorCardDisplay').value, denumire_card: document.getElementById('denumireCard').value, receipt_number: document.getElementById('receipt_number').value, supplier: document.getElementById('supplier').value, station: document.getElementById('station').value, product: document.getElementById('product').value, quantity: document.getElementById('quantity').value, price_per_liter: document.getElementById('price_per_liter').value, total_with_vat: document.getElementById('total_with_vat').value };
+            const mod = document.getElementById('formMode').value; 
+            const idBon = document.getElementById('bonIdEdit').value;
+            
+            if(!data.date || !data.sofer || !data.nr_auto || !data.supplier || !data.total_with_vat) { return alert("⚠️ Toate câmpurile sunt OBLIGATORII!"); }
+            
+            showLoader("Se salvează datele..."); 
+            
+            // --- FETCH POST PENTRU SALVARE ---
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    actiune: 'saveBon',
+                    formData: data,
+                    email: CURRENT_USER_EMAIL,
+                    mod: mod,
+                    idBon: idBon
+                })
+            })
+            .then(r => r.json())
+            .then(res => { 
+                hideLoader(); 
+                if(res.success) { 
+                    resetForm(); 
+                    switchView('list'); 
+                    alert("✅ Salvat!"); 
+                } else { 
+                    alert(res.error); 
+                } 
+            })
+            .catch(e => handleError(e));
+        }
+
+        function populateLists(data) {
+            GLOBAL_SOFERI = data.soferi || [];
+            GLOBAL_AUTO = data.auto || [];
+            setupCustomDropdown('soferInput', 'soferList', GLOBAL_SOFERI);
+            setupCustomDropdown('autoInput', 'autoList', GLOBAL_AUTO);
+        }
+
+        function setupCustomDropdown(inputId, listId, dataArray) {
+            const input = document.getElementById(inputId);
+            const list = document.getElementById(listId);
+            if(!input || !list) return;
+            const renderList = (filterText = '') => {
+                list.innerHTML = '';
+                const filtered = dataArray.filter(item => item && item.toLowerCase().includes(filterText.toLowerCase()));
+                if(filtered.length === 0) { list.style.display = 'none'; return; }
+                filtered.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'custom-dropdown-item'; div.textContent = item;
+                    div.onclick = () => { input.value = item; list.style.display = 'none'; };
+                    list.appendChild(div);
+                });
+                list.style.display = 'block';
+            };
+            input.addEventListener('input', (e) => renderList(e.target.value));
+            input.addEventListener('focus', () => renderList(input.value));
+            document.addEventListener('click', (e) => { if (!input.contains(e.target) && !list.contains(e.target)) list.style.display = 'none'; });
+        }
+
+        function refreshDashboard() { 
+            showLoader("Se sincronizează..."); 
+            // --- FETCH GET ---
+            fetch(`${SCRIPT_URL}?actiune=getBonuri&email=${encodeURIComponent(CURRENT_USER_EMAIL)}`)
+            .then(r => r.json())
+            .then(renderDashboard)
+            .catch(e => { hideLoader(); console.error(e); });
+        }
+
+        function renderDashboard(data) {
+            hideLoader();
+            const acc = document.getElementById('monthAccordion');
+            acc.innerHTML = '';
+            const noData = document.getElementById('no-data-state');
+            
+            if(!data || data.length === 0) { 
+                noData.classList.remove('hidden'); 
+                return; 
+            }
+            noData.classList.add('hidden');
+
+            const tree = {};
+            data.forEach(row => {
+                const d = new Date(row.data);
+                const mon = d.toLocaleDateString('ro-RO', { month: 'long', year: 'numeric' }).toUpperCase();
+                const supp = row.furnizor || 'NECUNOSCUT';
+                if(!tree[mon]) tree[mon] = {};
+                if(!tree[mon][supp]) tree[mon][supp] = [];
+                tree[mon][supp].push(row);
+            });
+
+            let idx = 0;
+            for (const [mon, suppliers] of Object.entries(tree)) {
+                idx++;
+                const item = document.createElement('div');
+                item.className = 'accordion-item'; 
+                item.innerHTML = `
+                    <h2 class="accordion-header"><button class="accordion-button collapsed rounded-4" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${idx}"><i class="fa-regular fa-calendar-alt me-2"></i> ${mon}</button></h2>
+                    <div id="collapse${idx}" class="accordion-collapse collapse" data-bs-parent="#monthAccordion"><div class="accordion-body" id="body${idx}"></div></div>
+                `;
+                acc.appendChild(item);
+                const bodyDiv = item.querySelector(`#body${idx}`);
+                let subIdx = 0;
+                for (const [supp, rows] of Object.entries(suppliers)) {
+                    subIdx++;
+                    const subId = `sub${idx}_${subIdx}`;
+                    const subAcc = document.createElement('div');
+                    subAcc.className = 'accordion mt-2';
+                    subAcc.innerHTML = `
+                        <div class="accordion-item border-0"><h2 class="accordion-header"><button class="accordion-button collapsed ps-3 bg-white shadow-sm border" type="button" data-bs-toggle="collapse" data-bs-target="#${subId}"><span class="text-dark fw-bold">${supp}</span> <span class="badge rounded-pill ms-auto px-3 py-2" style="background: var(--primary-gradient); font-weight:600;">${rows.length}</span></button></h2><div id="${subId}" class="accordion-collapse collapse"><div class="list-container-${subId} pt-2"></div></div></div>
+                    `;
+                    bodyDiv.appendChild(subAcc);
+                    const listDiv = subAcc.querySelector(`.list-container-${subId}`);
+                    rows.forEach(r => {
+                        const rowEl = document.createElement('div');
+                        rowEl.className = 'bon-row-container d-flex justify-content-between align-items-center';
+                        rowEl.innerHTML = `
+                            <div class="d-flex flex-column" onclick="showDetails(this.closest('.bon-row-container').dataset.row)">
+                                <span class="text-date-blue mb-1"><i class="fa-regular fa-calendar me-1"></i> ${new Date(r.data).toLocaleDateString('ro-RO')}</span>
+                                <span class="fw-bold text-dark mb-1" style="font-size:0.9rem;">${r.sofer || 'Nespecificat'}</span>
+                                <small class="text-muted">Nr bon: <strong>${r.nr_bon || '-'}</strong> &bull; Auto: <strong>${r.auto || '-'}</strong></small>
+                            </div>
+                            <div class="d-flex flex-column align-items-end">
+                                <div class="fw-bold text-success mb-2" style="font-size: 1rem;">${parseFloat(r.suma).toFixed(2)} Lei</div>
+                                <button type="button" class="btn btn-sm btn-light border rounded-pill py-0 px-2" onclick="event.stopPropagation(); window.open('${r.linkPoza}', '_blank')"><i class="fa-solid fa-camera text-secondary small"></i></button>
+                            </div>
+                        `;
+                        rowEl.dataset.row = JSON.stringify(r);
+                        rowEl.onclick = function() { showDetails(JSON.parse(this.dataset.row)); };
+                        listDiv.appendChild(rowEl);
+                    });
+                }
+            }
+        }
+
+        function showDetails(row) {
+            SELECTED_BON = row;
+            const b = document.getElementById('detailsBody');
+            document.getElementById('detailLinkImg').href = row.linkPoza;
+            b.innerHTML = `
+                <div class="row">
+                   <div class="col-12 mb-3"><h6 class="text-primary fw-bold mb-2 small border-bottom pb-1">DATE GENERALE</h6><div class="row g-2"><div class="col-6"><div class="detail-label">DATA</div><div class="detail-value">${new Date(row.data).toLocaleDateString('ro-RO')}</div></div><div class="col-6"><div class="detail-label">AUTO</div><div class="detail-value">${row.auto}</div></div><div class="col-12"><div class="detail-label">ȘOFER</div><div class="detail-value">${row.sofer}</div></div></div></div>
+                   <div class="col-12 mb-3"><h6 class="text-primary fw-bold mb-2 small border-bottom pb-1">CARD</h6><div class="row g-2"><div class="col-6"><div class="detail-label">FURNIZOR</div><div class="detail-value fw-bold">${row.furnizor_card || '-'}</div></div><div class="col-6"><div class="detail-label">NUMĂR</div><div class="detail-value">${row.card || '-'}</div></div><div class="col-12"><div class="detail-label">POSESOR</div><div class="detail-value">${row.posesor_card || '-'}</div></div></div></div>
+                   <div class="col-12 mb-3"><h6 class="text-primary fw-bold mb-2 small border-bottom pb-1">COMBUSTIBIL</h6><div class="row g-2"><div class="col-6"><div class="detail-label">NR. BON</div><div class="detail-value fw-bold text-dark">${row.nr_bon}</div></div><div class="col-6"><div class="detail-label">FURNIZOR</div><div class="detail-value fw-bold">${row.furnizor}</div></div><div class="col-12"><div class="detail-label">PRODUS</div><div class="detail-value">${row.produs}</div></div><div class="col-12"><div class="detail-label">STAȚIE</div><div class="detail-value">${row.statie}</div></div><div class="col-6"><div class="detail-label">CANTITATE</div><div class="detail-value">${row.litri} L</div></div></div></div>
+                   <div class="col-12"><h6 class="text-primary fw-bold mb-2 small border-bottom pb-1">DETALII FINANCIARE</h6><div class="row g-2 mb-3"><div class="col-4"><div class="detail-label">PREȚ/L (FĂRĂ TVA)</div><div class="detail-sub-value">${parseFloat(row.pret_fara_tva || 0).toFixed(2)}</div></div><div class="col-4"><div class="detail-label">TVA/L</div><div class="detail-sub-value">${parseFloat(row.tva_pret || 0).toFixed(2)}</div></div><div class="col-4"><div class="detail-label">PREȚ/L (TVA)</div><div class="detail-value fw-bold text-end">${parseFloat(row.pret).toFixed(2)}</div></div></div><div class="bg-light p-3 rounded-4 border"><div class="d-flex justify-content-between mb-1"><span class="detail-label text-muted">TOTAL BAZĂ</span><span class="fw-bold">${parseFloat(row.suma_fara_tva || 0).toFixed(2)}</span></div><div class="d-flex justify-content-between mb-2 pb-2 border-bottom"><span class="detail-label text-muted">TOTAL TVA</span><span class="fw-bold">${parseFloat(row.tva_suma || 0).toFixed(2)}</span></div><div class="d-flex justify-content-between align-items-center"><span class="fw-bold text-dark">TOTAL FACTURĂ</span><span class="display-6 fw-bold text-success">${parseFloat(row.suma).toFixed(2)} <span class="fs-6 text-muted">RON</span></span></div></div></div>
+                </div>`;
+            detailsModal.show();
+        }
+
+        function confirmDelete() { 
+            if(!SELECTED_BON) return; 
+            if(confirm("ATENȚIE: Ștergi acest bon permanent?")) { 
+                showLoader("Se șterge..."); 
+                detailsModal.hide(); 
+                
+                fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        actiune: 'deleteBon',
+                        idBon: SELECTED_BON.id,
+                        email: CURRENT_USER_EMAIL
+                    })
+                })
+                .then(r => r.json())
+                .then(res => { 
+                    hideLoader(); 
+                    if(res.success) { 
+                        refreshDashboard(); 
+                    } else { 
+                        alert(res.error); 
+                    } 
+                })
+                .catch(e => handleError(e));
+            } 
+        }
+        
+        function resetForm() { document.getElementById('bonForm').reset(); document.getElementById('hiddenPreviewImg').src=""; }
+        function showLoader(t) { document.getElementById('loaderText').innerText=t; document.getElementById('loader').style.display='flex'; }
+        function hideLoader() { document.getElementById('loader').style.display='none'; }
+        function handleError(e) { hideLoader(); alert(e); }
+    </script>
+</body>
+</html>
