@@ -666,36 +666,58 @@
     function renderTrips(trips) {
        const container = document.getElementById('trips-container');
        container.innerHTML = '';
-       if(!trips.length) { container.innerHTML = '<div class="text-center mt-5">Nu există date.</div>'; return; }
+       
+       if(!trips || trips.length === 0) { 
+           container.innerHTML = '<div class="text-center mt-5 text-muted">Nu există date.</div>'; 
+           return; 
+       }
 
+       // 1. Grupăm datele
        const groupedByMonth = {};
        trips.forEach(t => {
           let dStr = t.DATA_TRANSPORT;
-          if(typeof dStr !== 'string') try { dStr = new Date(dStr.value).toISOString().split('T')[0]; } catch(e) { dStr = "2024-01-01"; }
+          // Tratare robusta a datelor (String vs Object BigQuery)
+          try {
+             if(typeof dStr === 'object' && dStr.value) dStr = new Date(dStr.value).toISOString().split('T')[0];
+             else if(typeof dStr === 'string' && dStr.includes('T')) dStr = dStr.split('T')[0];
+          } catch(e) { dStr = "2024-01-01"; }
+          
+          if (!dStr) dStr = "2024-01-01";
+
           const y = dStr.split('-')[0];
           const m = parseInt(dStr.split('-')[1]);
           const mNames = ["", "IANUARIE", "FEBRUARIE", "MARTIE", "APRILIE", "MAI", "IUNIE", "IULIE", "AUGUST", "SEPTEMBRIE", "OCTOMBRIE", "NOIEMBRIE", "DECEMBRIE"];
-          const key = mNames[m] + " " + y;
+          const key = (mNames[m] || "LUNA NECUNOSCUTA") + " " + y;
+          
           if(!groupedByMonth[key]) groupedByMonth[key] = [];
           groupedByMonth[key].push(t);
        });
 
+       // 2. Construim HTML-ul (Metoda DOM - Sigură)
        let idx = 0;
        for(const [monthKey, monthTrips] of Object.entries(groupedByMonth)) {
           idx++;
           const accordionId = `accMonth${idx}`;
-          let monthHtml = `
-            <div class="accordion-item">
-               <h2 class="accordion-header">
-                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${accordionId}">
-                     <span><i class="far fa-calendar-alt me-2"></i> ${monthKey}</span>
-                     <i class="fas fa-chevron-down month-chevron"></i>
-                  </button>
-               </h2>
-               <div id="${accordionId}" class="accordion-collapse collapse" data-bs-parent="#trips-container">
-                  <div class="accordion-body">
+          
+          // Creăm elementul pentru LUNA
+          const monthItem = document.createElement('div');
+          monthItem.className = 'accordion-item';
+          monthItem.innerHTML = `
+             <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${accordionId}">
+                   <span><i class="far fa-calendar-alt me-2"></i> ${monthKey}</span>
+                   <i class="fas fa-chevron-down month-chevron"></i>
+                </button>
+             </h2>
+             <div id="${accordionId}" class="accordion-collapse collapse" data-bs-parent="#trips-container">
+                <div class="accordion-body" id="body${accordionId}"></div>
+             </div>
           `;
+          container.appendChild(monthItem);
+          
+          const monthBody = monthItem.querySelector(`#body${accordionId}`);
 
+          // Grupăm pe Șantiere în interiorul lunii
           const groupedBySite = {};
           monthTrips.forEach(t => {
               const site = t.SANTIER || 'FĂRĂ ȘANTIER';
@@ -707,16 +729,25 @@
           for(const [siteKey, siteTrips] of Object.entries(groupedBySite)) {
               subIdx++;
               const subId = `sub_${idx}_${subIdx}`;
-              monthHtml += `
-                <div class="accordion mt-1">
-                    <button class="sub-accordion-btn collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${subId}" aria-expanded="false">
-                        <div class="site-name-container"><span class="text-dark fw-bold">${siteKey}</span></div>
-                        <div class="site-badge-container"><span class="site-badge">${siteTrips.length}</span></div>
-                        <div class="site-arrow-container"><i class="fas fa-chevron-down site-chev"></i></div>
-                    </button>
-                    <div id="${subId}" class="accordion-collapse collapse">
-                        <div class="pt-2">
+              
+              // Creăm elementul pentru ȘANTIER
+              const siteAcc = document.createElement('div');
+              siteAcc.className = 'accordion mt-1';
+              siteAcc.innerHTML = `
+                  <button class="sub-accordion-btn collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${subId}" aria-expanded="false">
+                      <div class="site-name-container"><span class="text-dark fw-bold">${siteKey}</span></div>
+                      <div class="site-badge-container"><span class="site-badge">${siteTrips.length}</span></div>
+                      <div class="site-arrow-container"><i class="fas fa-chevron-down site-chev"></i></div>
+                  </button>
+                  <div id="${subId}" class="accordion-collapse collapse">
+                      <div class="pt-2" id="list${subId}"></div>
+                  </div>
               `;
+              monthBody.appendChild(siteAcc);
+              
+              const listDiv = siteAcc.querySelector(`#list${subId}`);
+
+              // Adăugăm CURSELE
               siteTrips.forEach(t => {
                  let displayDate = t.DATA_TRANSPORT;
                  try {
@@ -724,19 +755,18 @@
                      else if (typeof displayDate === 'object') displayDate = new Date(displayDate.value).toLocaleDateString('ro-RO');
                  } catch(e) { displayDate = t.DATA_TRANSPORT; }
                  
-                 monthHtml += `
-                    <div class="trip-card" onclick="openDetail('${t.ID}')">
+                 const rowEl = document.createElement('div');
+                 rowEl.className = 'trip-card';
+                 rowEl.onclick = function() { openDetail(t.ID); };
+                 rowEl.innerHTML = `
                        <div class="trip-date"><i class="far fa-calendar me-1"></i> ${displayDate}</div>
                        <div class="trip-main">${t.SOFER || 'Nespecificat'}</div>
                        <div class="trip-sub"><i class="fas fa-cubes me-1"></i> ${t.MATERIAL} &bull; ${t.NR_INMATRICULARE}</div>
                        <div class="trip-amount">${t.AVIZ_1_TONE || 0} t</div>
-                    </div>
                  `;
+                 listDiv.appendChild(rowEl);
               });
-              monthHtml += `</div></div></div>`; 
           }
-          monthHtml += `</div></div></div>`;
-          container.insertAdjacentHTML('beforeend', monthHtml);
        }
     }
 
