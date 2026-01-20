@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+  <title>Portal PABECON</title>
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    /* --- 1. FUNDAL & LAYOUT --- */
+    body { 
+        background-color: #f3f4f6;
+        background-image: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+        font-family: 'Poppins', sans-serif; 
+        min-height: 100vh; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        padding: 20px;
+        color: #1f2937;
+    }
+    
+    /* --- 2. CARD PRINCIPAL --- */
+    .card-portal { 
+        background: #ffffff;
+        border-radius: 32px; 
+        box-shadow: 0 30px 60px -12px rgba(50, 50, 93, 0.15), 0 18px 36px -18px rgba(0, 0, 0, 0.1);
+        width: 100%; 
+        max-width: 380px; 
+        padding: 40px 30px; 
+        text-align: center; 
+        position: relative; 
+        border: 1px solid rgba(255,255,255,0.8);
+    }
+    
+    /* --- 3. INPUTURI LOGIN --- */
+    .form-label { font-size: 0.75rem; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: block; text-align: left;}
+    
+    .form-control { 
+        border-radius: 16px; 
+        padding: 16px; 
+        border: 1px solid #e5e7eb; 
+        background-color: #f9fafb; 
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: #111827;
+        transition: 0.3s;
+    }
+    .form-control:focus { 
+        background-color: #fff; 
+        border-color: #8b5cf6; 
+        box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1); 
+        outline: none;
+    }
+    
+    /* --- 4. BUTON LOGIN --- */
+    .btn-main {
+        background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); /* Mov-Albastru */
+        border: none; color: white; padding: 16px; border-radius: 16px; font-weight: 700; width: 100%; font-size: 1rem;
+        box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3); transition: transform 0.2s; cursor: pointer;
+    }
+    .btn-main:active { transform: scale(0.98); }
+
+    /* --- 5. STIL GREETING (User Logat) --- */
+    .greeting-container { margin-bottom: 35px; text-align: center; }
+    .greeting-sub { color: #6b7280; font-size: 0.9rem; font-weight: 500; }
+    .greeting-name { 
+        color: #000000; 
+        font-weight: 800; 
+        font-size: 1.1rem; 
+        text-transform: uppercase; 
+        margin-top: 5px; 
+        line-height: 1.3;
+    }
+
+    /* --- 6. BUTOANE APLICATII (CARDURI) --- */
+    .app-card {
+        background: #ffffff;
+        border-radius: 24px;
+        padding: 15px 20px;
+        margin-bottom: 18px;
+        display: flex;
+        align-items: center;
+        text-align: left;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 1px solid #f3f4f6;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        height: 85px; /* Inaltime fixa pt aspect uniform */
+    }
+    
+    .app-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        border-color: transparent;
+    }
+
+    /* Containere Iconite */
+    .app-icon {
+        width: 55px; height: 55px;
+        border-radius: 18px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.5rem; color: white;
+        margin-right: 20px; flex-shrink: 0;
+    }
+
+    /* CULORI APLICATII (CERINTA: COMBUSTIBIL = MOV, TRANSPORT = ALBASTRU) */
+    .icon-fuel { 
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); /* MOV VIBRANT */
+        box-shadow: 0 8px 16px rgba(124, 58, 237, 0.3); 
+    }
+    .icon-trans { 
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); /* ALBASTRU VIBRANT */
+        box-shadow: 0 8px 16px rgba(37, 99, 235, 0.3); 
+    }
+
+    .app-info h5 { font-weight: 700; margin: 0; font-size: 1rem; color: #1f2937; letter-spacing: 0.3px; }
+    
+    .arrow-icon { margin-left: auto; color: #d1d5db; font-size: 0.9rem; }
+
+    /* --- 7. BUTON DELOGARE --- */
+    .btn-logout {
+        background-color: #fef2f2;
+        color: #ef4444;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        margin-top: 20px;
+        transition: 0.2s;
+    }
+    .btn-logout:hover { background-color: #fee2e2; color: #dc2626; }
+
+    /* --- UTILS --- */
+    .hidden { display: none !important; }
+    
+    /* Dropdown Autocomplete */
+    .custom-dropdown-wrapper { position: relative; }
+    .custom-dropdown-list {
+        position: absolute; top: 110%; left: 0; right: 0;
+        background: white; border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        max-height: 200px; overflow-y: auto; z-index: 1050; display: none;
+        padding: 5px; text-align: left;
+    }
+    .custom-dropdown-item { padding: 12px 15px; cursor: pointer; border-radius: 8px; color: #4b5563; font-size: 0.9rem; }
+    .custom-dropdown-item:hover { background-color: #f3f4f6; color: #7c3aed; font-weight: 600; }
+    
+    .input-icon-right { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); color: #9ca3af; pointer-events: none; }
+  </style>
+</head>
+<body>
+
+  <div class="card-portal">
+    
+    <div id="login-section">
+      <h3 style="font-weight:800; margin-bottom:5px;">Autentificare</h3>
+      <p style="color:#6b7280; font-size:0.9rem; margin-bottom:30px;">Portal Aplicații PABECON</p>
+      
+      <div class="mb-3 text-start">
+        <label class="form-label">Email</label>
+        <input type="email" id="loginEmail" class="form-control" value="">
+      </div>
+      
+      <div class="mb-3 text-start">
+        <label class="form-label">Nume Angajat</label>
+        <div class="custom-dropdown-wrapper">
+           <input type="text" id="loginName" class="form-control" placeholder="Caută..." autocomplete="off">
+           <i class="fa-solid fa-chevron-down input-icon-right"></i>
+           <div id="loginList" class="custom-dropdown-list"></div>
+        </div>
+      </div>
+      
+      <div class="mb-4 text-start">
+        <label class="form-label">Parola</label>
+        <input type="password" id="loginPass" class="form-control">
+      </div>
+      
+      <button class="btn-main" onclick="doPortalLogin()">INTRĂ</button>
+
+      <div id="loginErr" class="text-danger mt-3 small fw-bold"></div>
+      <div id="forgotPassLink" class="text-muted small mt-4" style="cursor:pointer; display:none; text-decoration:underline;" onclick="showResetPass()">
+           Ai uitat parola?
+      </div>
+    </div>
+
+    <div id="reset-section" class="hidden">
+        <h3 style="font-weight:800;">Resetare</h3>
+        <p style="color:#6b7280; font-size:0.9rem; margin-bottom:30px;">Alege o parolă nouă</p>
+        
+        <div class="mb-4 text-start">
+            <label class="form-label">Parolă Nouă</label>
+            <input type="password" class="form-control" id="newPass" placeholder="Minim 4 caractere">
+        </div>
+        
+        <button class="btn-main mb-3" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);" onclick="confirmResetPass()">
+            SALVEAZĂ
+        </button>
+        <button class="btn btn-link text-secondary text-decoration-none fw-bold" onclick="cancelReset()">Anulează</button>
+    </div>
+
+    <div id="menu-section" class="hidden">
+      <div class="greeting-container">
+          <div class="greeting-sub">Salut,</div>
+          <div class="greeting-name" id="userNameDisplay">USER</div>
+      </div>
+      
+      <div class="app-card" onclick="openApp('combustibil')">
+        <div class="app-icon icon-fuel">
+            <i class="fa-solid fa-gas-pump"></i>
+        </div>
+        <div class="app-info">
+            <h5>COMBUSTIBIL</h5>
+        </div>
+        <i class="fa-solid fa-chevron-right arrow-icon"></i>
+      </div>
+      
+      <div class="app-card" onclick="openApp('transport')">
+        <div class="app-icon icon-trans">
+            <i class="fa-solid fa-truck-fast"></i>
+        </div>
+        <div class="app-info">
+            <h5>TRANSPORT</h5>
+        </div>
+        <i class="fa-solid fa-chevron-right arrow-icon"></i>
+      </div>
+      
+      <button class="btn-logout" onclick="logout()">
+         <i class="fa-solid fa-power-off me-2"></i> Delogare
+      </button>
+    </div>
+    
+  </div>
+
+<script>
+  let GLOBAL_SOFERI = [];
+
+  window.onload = function() {
+    google.script.run
+      .withSuccessHandler(data => {
+          if (data && data.soferi) {
+              GLOBAL_SOFERI = data.soferi;
+              setupCustomDropdown('loginName', 'loginList', GLOBAL_SOFERI);
+          }
+      })
+      .getNomenclatoare();
+
+    const saved = localStorage.getItem('pabecon_user');
+    if(saved) {
+      const u = JSON.parse(saved);
+      showMenu(u.nume);
+    }
+  }
+
+  // --- LOGICA ---
+  function doPortalLogin() {
+    const e = document.getElementById('loginEmail').value;
+    const p = document.getElementById('loginPass').value;
+    const n = document.getElementById('loginName').value;
+    const errDiv = document.getElementById('loginErr');
+    const forgotLink = document.getElementById('forgotPassLink');
+    
+    errDiv.innerText = "";
+    forgotLink.style.display = 'none';
+
+    if(!e || !p || !n) { 
+        errDiv.innerText = "Completează toate câmpurile."; return; 
+    }
+    
+    const btn = event.target;
+    const oldText = btn.innerText;
+    btn.innerText = "...";
+    
+    google.script.run.withSuccessHandler(res => {
+      btn.innerText = oldText;
+      if(res.success) {
+        localStorage.setItem('pabecon_user', JSON.stringify({ email: e, nume: res.nume }));
+        showMenu(res.nume);
+      } else {
+        if(res.error === 'PASS_MISMATCH') {
+            errDiv.innerText = "Parolă incorectă!";
+            forgotLink.style.display = 'block';
+        } else if (res.error === 'NUME_MISMATCH') {
+            errDiv.innerText = "Numele nu corespunde cu emailul!";
+        } else {
+            errDiv.innerText = res.error;
+        }
+      }
+    }).handleUserAuth(e, p, n);
+  }
+
+  function showResetPass() {
+    document.getElementById('login-section').classList.add('hidden');
+    document.getElementById('reset-section').classList.remove('hidden');
+  }
+  function cancelReset() {
+    document.getElementById('login-section').classList.remove('hidden');
+    document.getElementById('reset-section').classList.add('hidden');
+  }
+  function confirmResetPass() {
+    const newP = document.getElementById('newPass').value;
+    const e = document.getElementById('loginEmail').value;
+    const n = document.getElementById('loginName').value;
+    if(!newP || newP.length < 4) return alert("Parolă prea scurtă.");
+    
+    google.script.run.withSuccessHandler(res => {
+        if(res.success) { alert("Salvat!"); cancelReset(); document.getElementById('loginPass').value = newP; }
+        else alert(res.message);
+    }).resetUserPassword(e, n, newP);
+  }
+
+  function showMenu(nume) {
+    document.getElementById('login-section').classList.add('hidden');
+    document.getElementById('reset-section').classList.add('hidden');
+    document.getElementById('menu-section').classList.remove('hidden');
+    document.getElementById('userNameDisplay').innerText = nume;
+  }
+
+  function openApp(appName) {
+    const card = event.currentTarget;
+    card.style.transform = "scale(0.98)";
+    setTimeout(() => card.style.transform = "none", 150);
+
+    google.script.run.withSuccessHandler(url => {
+      window.top.location.href = url + '?page=' + appName;
+    }).getScriptUrl(); 
+  }
+
+  function logout() {
+    if(confirm("Vrei să ieși?")) {
+        localStorage.removeItem('pabecon_user');
+        location.reload();
+    }
+  }
+
+  function setupCustomDropdown(inputId, listId, dataArray) {
+    const input = document.getElementById(inputId);
+    const list = document.getElementById(listId);
+    if(!input || !list) return;
+
+    const renderList = (filterText = '') => {
+        list.innerHTML = '';
+        const filtered = dataArray.filter(item => item && item.toLowerCase().includes(filterText.toLowerCase()));
+        if(filtered.length === 0) { list.style.display = 'none'; return; }
+        filtered.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'custom-dropdown-item';
+            div.textContent = item;
+            div.onclick = () => { input.value = item; list.style.display = 'none'; };
+            list.appendChild(div);
+        });
+        list.style.display = 'block';
+    };
+    input.addEventListener('input', (e) => renderList(e.target.value));
+    input.addEventListener('focus', () => renderList(input.value));
+    document.addEventListener('click', (e) => {
+        if (!input.contains(e.target) && !list.contains(e.target)) list.style.display = 'none';
+    });
+  }
+</script>
+</body>
+</html>
