@@ -364,15 +364,19 @@
   }
 
   function openApp(appName) {
-    // Aici trebuie sa decizi: Deschizi tot un link Apps Script sau alta pagina?
-    // Momentan te duce spre scriptul original ca pagina web
     const card = event.currentTarget;
+    // Efect vizual
     card.style.transform = "scale(0.98)";
     setTimeout(() => card.style.transform = "none", 150);
 
-    // Deschidem aplicatia specifica
-    window.open(`${SCRIPT_URL}?page=${appName}`, '_blank');
-  }
+    // NAVIGARE SIMPLA INTRE PAGINI HTML
+    if (appName === 'combustibil') {
+        window.location.href = "combustibil.html";
+    } 
+    else if (appName === 'transport') {
+        window.location.href = "transport.html";
+    }
+}
 
   function logout() {
     if(confirm("Vrei să ieși?")) {
