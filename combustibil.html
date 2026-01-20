@@ -129,19 +129,28 @@
     <div id="main-app" class="hidden">
         
         <div class="fixed-header-wrapper">
-            <div class="app-header">
-                <div class="d-flex align-items-center">
-                    <button class="btn-back" onclick="window.location.href='index.html'"><i class="fa-solid fa-arrow-left"></i></button>
-                    <div class="header-title"><i class="fa-solid fa-gas-pump"></i> Combustibil</div>
-                </div>
-                <div class="user-pill"><i class="fa-solid fa-user-circle fa-lg"></i> <span id="displayUserName">User</span></div>
+        <div class="app-header">
+            <div class="d-flex align-items-center">
+                <button class="btn-back" onclick="window.location.href='index.html'"><i class="fa-solid fa-arrow-left"></i></button>
+                <div class="header-title"><i class="fa-solid fa-gas-pump"></i> Bonuri</div>
             </div>
-
-            <div class="top-nav">
-                <button class="nav-pill-btn active" id="tab-list" onclick="switchView('list')">Istoric</button>
-                <button class="nav-pill-btn" id="tab-add" onclick="openAddScreen()">Adaugă</button>
+            <div class="d-flex align-items-center gap-2">
+                 <div id="netStatus" class="badge bg-success rounded-pill d-flex align-items-center gap-1 shadow-sm" style="font-size:0.75rem; transition:0.3s;">
+                    <i class="fas fa-wifi"></i> <span>ONLINE</span>
+                 </div>
+                 <div class="user-pill"><i class="fa-solid fa-user-circle fa-lg"></i> <span id="displayUserName">User</span></div>
             </div>
         </div>
+
+        <div class="top-nav">
+            <button class="nav-pill-btn active" id="tab-list" onclick="switchView('list')">Istoric</button>
+            <button class="nav-pill-btn" id="tab-add" onclick="openAddScreen()">Adaugă</button>
+        </div>
+        
+        <div id="syncMessage" class="bg-warning text-dark text-center py-1 small fw-bold hidden">
+            <i class="fas fa-sync fa-spin"></i> Se sincronizează datele salvate offline...
+        </div>
+    </div>
 
         <div class="container pb-5">
             
@@ -222,161 +231,252 @@
     <div class="modal fade" id="imgModal" tabindex="-1"><div class="modal-dialog modal-fullscreen"><div class="modal-content bg-black"><button type="button" class="position-absolute top-0 end-0 m-3 btn btn-light rounded-circle shadow" data-bs-dismiss="modal" style="z-index:1070; width:40px; height:40px;"><i class="fa-solid fa-times"></i></button><div class="modal-body p-0 d-flex align-items-center justify-content-center" onclick="imgModal.hide()"><img id="fullSizeImg" src=""></div></div></div></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // ==========================================
-        // CONFIGURARE OBLIGATORIE
-        // ==========================================
-        const SCRIPT_URL = "https://script.google.com/a/macros/logissupport.ro/s/AKfycbz6Nyardm3ixuhS7jvs1Xt8Rq1pIUrtw4a8QdeLTjM9Oz5YEFgbdPAH1nD3o7Kw3sJM/exec"; 
-        
-        const detailsModal = new bootstrap.Modal(document.getElementById('detailsModal'));
-        const imgModal = new bootstrap.Modal(document.getElementById('imgModal'));
-        
-        let CURRENT_USER_EMAIL = "";
-        let CURRENT_USER_NAME = "";
-        let SELECTED_BON = null;
-        let GLOBAL_SOFERI = [];
-        let GLOBAL_AUTO = [];
+       <script>
+    // ==========================================
+    // 1. CONFIGURARE & VARIABILE
+    // ==========================================
+    const SCRIPT_URL = "https://script.google.com/a/macros/logissupport.ro/s/AKfycbz6Nyardm3ixuhS7jvs1Xt8Rq1pIUrtw4a8QdeLTjM9Oz5YEFgbdPAH1nD3o7Kw3sJM/exec"; 
+    const OFFLINE_KEY = "combustibil_offline_queue";
+    
+    const detailsModal = new bootstrap.Modal(document.getElementById('detailsModal'));
+    const imgModal = new bootstrap.Modal(document.getElementById('imgModal'));
+    
+    let CURRENT_USER_EMAIL = "";
+    let CURRENT_USER_NAME = "";
+    let SELECTED_BON = null;
+    let GLOBAL_SOFERI = [];
+    let GLOBAL_AUTO = [];
 
-        // 1. INITIALIZARE
-        window.onload = function() {
-            showLoader("Se inițializează...");
-            const savedUser = localStorage.getItem('pabecon_user');
+    // ==========================================
+    // 2. INITIALIZARE & RETEA
+    // ==========================================
+    window.onload = function() {
+        showLoader("Se inițializează...");
+        
+        // Listeners Retea
+        window.addEventListener('online', updateNetworkStatus);
+        window.addEventListener('offline', updateNetworkStatus);
+        updateNetworkStatus();
+
+        const savedUser = localStorage.getItem('pabecon_user');
+        if (savedUser) {
+            const u = JSON.parse(savedUser);
+            CURRENT_USER_EMAIL = u.email;
+            CURRENT_USER_NAME = u.nume;
+            document.getElementById('displayUserName').innerText = u.nume;
+            document.getElementById('main-app').classList.remove('hidden');
             
-            if (savedUser) {
-                const u = JSON.parse(savedUser);
-                CURRENT_USER_EMAIL = u.email;
-                CURRENT_USER_NAME = u.nume;
-                document.getElementById('displayUserName').innerText = u.nume;
-                document.getElementById('main-app').classList.remove('hidden');
-                
-                // Fetch Nomenclatoare
+            // Incarcam liste (daca e net)
+            if(navigator.onLine) {
                 fetch(`${SCRIPT_URL}?actiune=getNomenclatoare`)
                     .then(r => r.json())
                     .then(d => {
                         populateLists(d);
                         refreshDashboard();
                     })
-                    .catch(err => handleError("Eroare conexiune: " + err));
+                    .catch(err => {
+                        hideLoader();
+                        // Daca da eroare la init, incercam sa mergem mai departe
+                        console.error(err);
+                    });
             } else {
                 hideLoader();
-                alert("Te rugăm să te loghezi prin Portal.");
-                window.location.href = 'index.html';
+                document.getElementById('no-data-state').innerHTML = "<p>Mod Offline Activat.<br>Poți adăuga bonuri noi.</p>";
+                document.getElementById('no-data-state').classList.remove('hidden');
             }
-        };
-
-        function switchView(view) {
-            const listDiv = document.getElementById('view-list');
-            const addDiv = document.getElementById('view-add');
-            const tabList = document.getElementById('tab-list');
-            const tabAdd = document.getElementById('tab-add');
-            const stickyBtn = document.getElementById('stickyImgBtn');
-
-            if (view === 'list') {
-                listDiv.classList.remove('hidden');
-                addDiv.classList.add('hidden');
-                
-                tabList.classList.add('active');
-                tabAdd.classList.remove('active');
-                tabAdd.innerText = "Adaugă";
-                stickyBtn.classList.add('hidden');
-                
-                refreshDashboard();
-            } else {
-                listDiv.classList.add('hidden');
-                addDiv.classList.remove('hidden');
-                
-                tabList.classList.remove('active');
-                tabAdd.classList.add('active');
-            }
+        } else {
+            hideLoader();
+            alert("Te rugăm să te loghezi prin Portal.");
+            window.location.href = 'index.html';
         }
+    };
 
-        // --- ADAUGARE ---
-        function openAddScreen() {
-            resetForm(); 
-            document.getElementById('formMode').value = 'INSERT'; 
-            document.getElementById('tab-add').innerText = 'Adaugă Bon';
-            
-            document.getElementById('uploadStep').classList.remove('hidden');
-            document.getElementById('formStep').classList.add('hidden');
-            document.getElementById('hiddenPreviewImg').src = "";
-            document.getElementById('stickyImgBtn').classList.add('hidden');
-            
-            if(CURRENT_USER_NAME) document.getElementById('soferInput').value = CURRENT_USER_NAME;
-            switchView('add');
-        }
-
-        // --- EDITARE ---
-        function openEditFromDetails() {
-            if(!SELECTED_BON) return;
-            detailsModal.hide();
-            
-            const dataObj = SELECTED_BON;
-            resetForm(); 
-            document.getElementById('formMode').value = 'UPDATE'; 
-            document.getElementById('tab-add').innerText = 'Editează Bon';
-            
-            document.getElementById('uploadStep').classList.add('hidden');
-            document.getElementById('formStep').classList.remove('hidden');
-            
-            document.getElementById('bonIdEdit').value = dataObj.id; 
-            document.getElementById('poza_url_drive').value = dataObj.linkPoza; 
-            
-            if(dataObj.linkPoza) {
-                document.getElementById('hiddenPreviewImg').src = dataObj.linkPoza; 
-                document.getElementById('stickyImgBtn').classList.remove('hidden');
-            } else {
-                document.getElementById('stickyImgBtn').classList.add('hidden');
-            }
-
-            document.getElementById('date').value = dataObj.data; 
-            document.getElementById('soferInput').value = dataObj.sofer; 
-            document.getElementById('autoInput').value = dataObj.auto; 
-            document.getElementById('posesorCard').value = dataObj.posesor_card; 
-            document.getElementById('furnizorCardDisplay').value = dataObj.furnizor_card; 
-            document.getElementById('denumireCard').value = dataObj.card; 
-            document.getElementById('receipt_number').value = dataObj.nr_bon; 
-            document.getElementById('station').value = dataObj.statie; 
-            document.getElementById('supplier').value = dataObj.furnizor; 
-            document.getElementById('product').value = dataObj.produs; 
-            document.getElementById('price_per_liter').value = dataObj.pret; 
-            document.getElementById('quantity').value = dataObj.litri; 
-            document.getElementById('total_with_vat').value = dataObj.suma;
-            
-            switchView('add');
-        }
-
-        function skipUpload() { 
-            document.getElementById('uploadStep').classList.add('hidden'); 
-            document.getElementById('formStep').classList.remove('hidden'); 
-            document.getElementById('stickyImgBtn').classList.add('hidden');
-        }
+    function updateNetworkStatus() {
+        const badge = document.getElementById('netStatus');
+        const queue = getQueue();
         
-        function processImage() {
-            const input = document.getElementById('cameraInput'); 
-            if (input.files.length === 0) return; 
-            const file = input.files[0];
-            
-            showLoader("Se analizează cu AI...");
-            
-            const reader = new FileReader(); 
-            reader.onload = (e) => { 
-                document.getElementById('hiddenPreviewImg').src = e.target.result; 
-                document.getElementById('stickyImgBtn').classList.remove('hidden');
-            }; 
-            reader.readAsDataURL(file);
-            
-            const r2 = new FileReader(); 
-            r2.onload = function(evt) { 
-                const img = new Image(); 
-                img.onload = function() { 
-                    const c = document.createElement('canvas'); const ctx = c.getContext('2d'); const max = 1600; 
-                    let w=img.width, h=img.height; 
-                    if(w>h){if(w>max){h*=max/w;w=max}}else{if(h>max){w*=max/h;h=max}} 
-                    c.width=w;c.height=h; 
-                    ctx.drawImage(img,0,0,w,h); 
-                    const b64 = c.toDataURL('image/jpeg',0.85).split(',')[1]; 
-                    
-                    // --- FETCH POST PENTRU ANALIZA ---
+        if (navigator.onLine) {
+            badge.className = "badge bg-success rounded-pill d-flex align-items-center gap-1 shadow-sm";
+            badge.innerHTML = `<i class="fas fa-wifi"></i> <span>ONLINE</span>`;
+            if (queue.length > 0) processQueue();
+        } else {
+            badge.className = "badge bg-danger rounded-pill d-flex align-items-center gap-1 shadow-sm";
+            badge.innerHTML = `<i class="fas fa-slash"></i> <span>OFFLINE (${queue.length})</span>`;
+        }
+    }
+
+    // ==========================================
+    // 3. LOGICA OFFLINE (QUEUE)
+    // ==========================================
+    function getQueue() { return JSON.parse(localStorage.getItem(OFFLINE_KEY) || "[]"); }
+
+    function saveToQueue(payload) {
+        const queue = getQueue();
+        payload._tempId = Date.now();
+        queue.push(payload);
+        localStorage.setItem(OFFLINE_KEY, JSON.stringify(queue));
+        updateNetworkStatus();
+    }
+
+    async function processQueue() {
+        const queue = getQueue();
+        if (queue.length === 0) return;
+
+        const syncMsg = document.getElementById('syncMessage');
+        syncMsg.classList.remove('hidden');
+        syncMsg.innerHTML = `<i class="fas fa-sync fa-spin"></i> Se sincronizează ${queue.length} bonuri...`;
+
+        const itemToSync = queue[0];
+
+        try {
+            // Trimitem la server
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(itemToSync)
+            });
+            const res = await response.json();
+
+            if (res.success) {
+                queue.shift(); // Stergem primul element
+                localStorage.setItem(OFFLINE_KEY, JSON.stringify(queue));
+                
+                if (queue.length > 0) {
+                    processQueue(); // Continuam
+                } else {
+                    syncMsg.classList.add('hidden');
+                    updateNetworkStatus();
+                    alert("✅ Toate bonurile offline au fost sincronizate!");
+                    refreshDashboard();
+                }
+            } else {
+                console.error("Server reject:", res.message);
+                syncMsg.innerText = "Eroare sync. Reîncercăm...";
+                setTimeout(() => syncMsg.classList.add('hidden'), 3000);
+            }
+        } catch (err) {
+            console.error("Net error:", err);
+            syncMsg.classList.add('hidden');
+        }
+    }
+
+    // ==========================================
+    // 4. FUNCTIONALITATE APP
+    // ==========================================
+
+    function switchView(view) {
+        const listDiv = document.getElementById('view-list');
+        const addDiv = document.getElementById('view-add');
+        const tabList = document.getElementById('tab-list');
+        const tabAdd = document.getElementById('tab-add');
+        const stickyBtn = document.getElementById('stickyImgBtn');
+
+        if (view === 'list') {
+            listDiv.classList.remove('hidden');
+            addDiv.classList.add('hidden');
+            tabList.classList.add('active');
+            tabAdd.classList.remove('active');
+            tabAdd.innerText = "Adaugă";
+            stickyBtn.classList.add('hidden');
+            if(navigator.onLine) refreshDashboard();
+        } else {
+            listDiv.classList.add('hidden');
+            addDiv.classList.remove('hidden');
+            tabList.classList.remove('active');
+            tabAdd.classList.add('active');
+        }
+    }
+
+    // --- ADAUGARE / EDITARE ---
+    function openAddScreen() {
+        resetForm(); 
+        document.getElementById('formMode').value = 'INSERT'; 
+        document.getElementById('tab-add').innerText = 'Adaugă Bon';
+        
+        document.getElementById('uploadStep').classList.remove('hidden');
+        document.getElementById('formStep').classList.add('hidden');
+        document.getElementById('hiddenPreviewImg').src = "";
+        document.getElementById('stickyImgBtn').classList.add('hidden');
+        
+        if(CURRENT_USER_NAME) document.getElementById('soferInput').value = CURRENT_USER_NAME;
+        switchView('add');
+    }
+
+    function openEditFromDetails() {
+        if(!navigator.onLine) { alert("Editarea funcționează doar Online!"); return; }
+        if(!SELECTED_BON) return;
+        detailsModal.hide();
+        
+        const dataObj = SELECTED_BON;
+        resetForm(); 
+        document.getElementById('formMode').value = 'UPDATE'; 
+        document.getElementById('tab-add').innerText = 'Editează Bon';
+        
+        document.getElementById('uploadStep').classList.add('hidden');
+        document.getElementById('formStep').classList.remove('hidden');
+        
+        document.getElementById('bonIdEdit').value = dataObj.id; 
+        document.getElementById('poza_url_drive').value = dataObj.linkPoza; 
+        
+        if(dataObj.linkPoza) {
+            document.getElementById('hiddenPreviewImg').src = dataObj.linkPoza; 
+            document.getElementById('stickyImgBtn').classList.remove('hidden');
+        } else {
+            document.getElementById('stickyImgBtn').classList.add('hidden');
+        }
+
+        document.getElementById('date').value = dataObj.data; 
+        document.getElementById('soferInput').value = dataObj.sofer; 
+        document.getElementById('autoInput').value = dataObj.auto; 
+        document.getElementById('posesorCard').value = dataObj.posesor_card; 
+        document.getElementById('furnizorCardDisplay').value = dataObj.furnizor_card; 
+        document.getElementById('denumireCard').value = dataObj.card; 
+        document.getElementById('receipt_number').value = dataObj.nr_bon; 
+        document.getElementById('station').value = dataObj.statie; 
+        document.getElementById('supplier').value = dataObj.furnizor; 
+        document.getElementById('product').value = dataObj.produs; 
+        document.getElementById('price_per_liter').value = dataObj.pret; 
+        document.getElementById('quantity').value = dataObj.litri; 
+        document.getElementById('total_with_vat').value = dataObj.suma;
+        
+        switchView('add');
+    }
+
+    function skipUpload() { 
+        document.getElementById('uploadStep').classList.add('hidden'); 
+        document.getElementById('formStep').classList.remove('hidden'); 
+        document.getElementById('stickyImgBtn').classList.add('hidden');
+    }
+    
+    // --- PROCESARE IMAGINE (COMPRESIE + AI) ---
+    function processImage() {
+        const input = document.getElementById('cameraInput'); 
+        if (input.files.length === 0) return; 
+        const file = input.files[0];
+        
+        showLoader("Se procesează imaginea...");
+        
+        // Citire fisier
+        const reader = new FileReader(); 
+        reader.onload = (evt) => { 
+            const img = new Image(); 
+            img.onload = function() { 
+                // COMPRESIE CANVAS (RESIZING)
+                const c = document.createElement('canvas'); 
+                const ctx = c.getContext('2d'); 
+                const max = 1200; // Limita rezonabila pt AI si upload
+                let w=img.width, h=img.height; 
+                if(w>h){if(w>max){h*=max/w;w=max}}else{if(h>max){w*=max/h;h=max}} 
+                c.width=w;c.height=h; 
+                ctx.drawImage(img,0,0,w,h); 
+                
+                const b64 = c.toDataURL('image/jpeg',0.75).split(',')[1]; // Comprimare 0.75
+                
+                // Previzualizare
+                document.getElementById('hiddenPreviewImg').src = c.toDataURL('image/jpeg');
+                
+                // DECIZIE: AI ONLINE sau MANUAL OFFLINE
+                if(navigator.onLine) {
+                    showLoader("Se analizează cu AI...");
                     fetch(SCRIPT_URL, {
                         method: 'POST',
                         body: JSON.stringify({
@@ -386,61 +486,131 @@
                         })
                     })
                     .then(r => r.json())
-                    .then(fillForm)
-                    .catch(e => handleError(e));
-                }; 
-                img.src = evt.target.result; 
+                    .then(res => {
+                        // Salvam B64 in input ascuns ca sa-l avem la salvare (daca userul nu schimba poza)
+                        // Atentie: Aici folosim un truc. De obicei salvam URL. 
+                        // Daca AI-ul a mers, a salvat deja in Drive? Codul tau original de backend
+                        // salva in Drive LA ANALIZA. Deci res.data.poza_url e valid.
+                        fillForm(res);
+                    })
+                    .catch(e => {
+                        hideLoader();
+                        alert("Eroare AI. Completează manual.");
+                        skipUpload();
+                        // Putem pastra Base64 pentru upload manual ulterior?
+                        // Codul tau 'analizaBon' din Apps Script salveaza poza. 
+                        // Daca pica AI-ul, poza nu e in Drive. 
+                        // Vom pune B64 intr-un camp hidden temporar daca vrei, 
+                        // dar pt simplitate, userul completeaza manual.
+                    });
+                } else {
+                    // OFFLINE
+                    hideLoader();
+                    alert("⚠️ Ești Offline. AI-ul nu funcționează.\nPoza a fost salvată local.\nTe rugăm să completezi datele manual.");
+                    
+                    // Salvam B64 intr-un camp temporar ca sa fie trimis la salvarea finala
+                    // (Asta e diferit de fluxul online unde analiza salva poza)
+                    // Vom adauga un camp hidden special pt Offline Image Blob
+                    document.getElementById('poza_url_drive').value = "OFFLINE_PENDING"; 
+                    document.getElementById('hiddenPreviewImg').dataset.offlineB64 = b64; 
+                    
+                    skipUpload();
+                    document.getElementById('stickyImgBtn').classList.remove('hidden');
+                }
             }; 
-            r2.readAsDataURL(file);
+            img.src = evt.target.result; 
+        }; 
+        reader.readAsDataURL(file);
+    }
+
+    function fillForm(res) {
+        hideLoader(); 
+        if(!res.success) { alert("Eroare AI: " + res.error); skipUpload(); return; }
+        
+        const d = res.data; 
+        skipUpload(); 
+        document.getElementById('stickyImgBtn').classList.remove('hidden');
+        
+        if(d.poza_url) document.getElementById('poza_url_drive').value = d.poza_url;
+        if(d.date) document.getElementById('date').value = d.date;
+        if(d.receipt_number) document.getElementById('receipt_number').value = d.receipt_number;
+        if(d.supplier) document.getElementById('supplier').value = d.supplier;
+        if(d.station) document.getElementById('station').value = d.station;
+        if(d.product) document.getElementById('product').value = d.product;
+        if(d.quantity) document.getElementById('quantity').value = d.quantity;
+        if(d.price_per_liter) document.getElementById('price_per_liter').value = d.price_per_liter;
+        if(d.total_with_vat) document.getElementById('total_with_vat').value = d.total_with_vat;
+        if(d.posesor_card) document.getElementById('posesorCard').value = d.posesor_card;
+        if(d.denumire_card) document.getElementById('denumireCard').value = d.denumire_card;
+        if(d.furnizor_card) document.getElementById('furnizorCardDisplay').value = d.furnizor_card ? d.furnizor_card.toUpperCase() : '';
+        if(CURRENT_USER_NAME) document.getElementById('soferInput').value = CURRENT_USER_NAME;
+    }
+
+    function openFullImage() { 
+        const s = document.getElementById('hiddenPreviewImg').src; 
+        if(s){ document.getElementById('fullSizeImg').src=s; imgModal.show(); } 
+    }
+
+    function submitData() {
+        // Colectare date
+        const data = { 
+            poza_url: document.getElementById('poza_url_drive').value, 
+            date: document.getElementById('date').value, 
+            sofer: document.getElementById('soferInput').value, 
+            nr_auto: document.getElementById('autoInput').value, 
+            posesor_card: document.getElementById('posesorCard').value, 
+            furnizor_card: document.getElementById('furnizorCardDisplay').value, 
+            denumire_card: document.getElementById('denumireCard').value, 
+            receipt_number: document.getElementById('receipt_number').value, 
+            supplier: document.getElementById('supplier').value, 
+            station: document.getElementById('station').value, 
+            product: document.getElementById('product').value, 
+            quantity: document.getElementById('quantity').value, 
+            price_per_liter: document.getElementById('price_per_liter').value, 
+            total_with_vat: document.getElementById('total_with_vat').value 
+        };
+        
+        // Verificare campuri obligatorii
+        if(!data.date || !data.sofer || !data.nr_auto || !data.supplier || !data.total_with_vat) { 
+            return alert("⚠️ Toate câmpurile sunt OBLIGATORII!"); 
         }
 
-        function fillForm(res) {
-            hideLoader(); 
-            if(!res.success) { alert("Eroare AI: " + res.error); skipUpload(); return; }
+        // Verificam daca avem o poza offline care trebuie atasata la payload
+        // (Pt ca nu a trecut prin server sa primeasca URL)
+        let offlineImage = null;
+        if (data.poza_url === "OFFLINE_PENDING") {
+            offlineImage = document.getElementById('hiddenPreviewImg').dataset.offlineB64;
+            // Backend-ul trebuie sa stie sa preia 'offlineImage' si sa o uploadeze, apoi sa genereze URL
+            // Vom modifica structura payload-ului sa suporte asta.
+            // Nota: Functia ta 'proceseazaBon' din Apps Script asteapta 'poza_url'.
+            // Dar 'analizeazaImagineDinFormular' face upload.
+            // Solutie simpla: In 'doPost', daca primeste 'offlineImage', facem upload acolo.
+            // Sau: Trimitem totul ca "saveBon" si adaugam logica in Apps Script?
+            // Cea mai simpla solutie fara a modifica Apps Script acum:
+            // Trimitem 'poza_url' ca Base64 (foarte lung). Apps Script trebuie sa verifice daca e URL sau B64.
+            // Daca e B64, face fisier.
+            // Hai sa mergem pe varianta: Adaugam 'imageBlob' in payload.
             
-            const d = res.data; 
-            skipUpload(); 
-            document.getElementById('stickyImgBtn').classList.remove('hidden');
-            
-            if(d.poza_url) document.getElementById('poza_url_drive').value = d.poza_url;
-            if(d.date) document.getElementById('date').value = d.date;
-            if(d.receipt_number) document.getElementById('receipt_number').value = d.receipt_number;
-            if(d.supplier) document.getElementById('supplier').value = d.supplier;
-            if(d.station) document.getElementById('station').value = d.station;
-            if(d.product) document.getElementById('product').value = d.product;
-            if(d.quantity) document.getElementById('quantity').value = d.quantity;
-            if(d.price_per_liter) document.getElementById('price_per_liter').value = d.price_per_liter;
-            if(d.total_with_vat) document.getElementById('total_with_vat').value = d.total_with_vat;
-            if(d.posesor_card) document.getElementById('posesorCard').value = d.posesor_card;
-            if(d.denumire_card) document.getElementById('denumireCard').value = d.denumire_card;
-            if(d.furnizor_card) document.getElementById('furnizorCardDisplay').value = d.furnizor_card ? d.furnizor_card.toUpperCase() : '';
-            if(CURRENT_USER_NAME) document.getElementById('soferInput').value = CURRENT_USER_NAME;
+            data.poza_url = ""; // Resetam ca sa nu crape SQL
         }
 
-        function openFullImage() { 
-            const s = document.getElementById('hiddenPreviewImg').src; 
-            if(s){ document.getElementById('fullSizeImg').src=s; imgModal.show(); } 
-        }
+        const mod = document.getElementById('formMode').value; 
+        const idBon = document.getElementById('bonIdEdit').value;
 
-        function submitData() {
-            const data = { poza_url: document.getElementById('poza_url_drive').value, date: document.getElementById('date').value, sofer: document.getElementById('soferInput').value, nr_auto: document.getElementById('autoInput').value, posesor_card: document.getElementById('posesorCard').value, furnizor_card: document.getElementById('furnizorCardDisplay').value, denumire_card: document.getElementById('denumireCard').value, receipt_number: document.getElementById('receipt_number').value, supplier: document.getElementById('supplier').value, station: document.getElementById('station').value, product: document.getElementById('product').value, quantity: document.getElementById('quantity').value, price_per_liter: document.getElementById('price_per_liter').value, total_with_vat: document.getElementById('total_with_vat').value };
-            const mod = document.getElementById('formMode').value; 
-            const idBon = document.getElementById('bonIdEdit').value;
-            
-            if(!data.date || !data.sofer || !data.nr_auto || !data.supplier || !data.total_with_vat) { return alert("⚠️ Toate câmpurile sunt OBLIGATORII!"); }
-            
-            showLoader("Se salvează datele..."); 
-            
-            // --- FETCH POST PENTRU SALVARE ---
+        const payload = {
+            actiune: 'saveBon',
+            formData: data,
+            email: CURRENT_USER_EMAIL,
+            mod: mod,
+            idBon: idBon,
+            offlineImage: offlineImage // Trimitem poza B64 daca exista
+        };
+
+        if (navigator.onLine) {
+            showLoader("Se salvează online...");
             fetch(SCRIPT_URL, {
                 method: 'POST',
-                body: JSON.stringify({
-                    actiune: 'saveBon',
-                    formData: data,
-                    email: CURRENT_USER_EMAIL,
-                    mod: mod,
-                    idBon: idBon
-                })
+                body: JSON.stringify(payload)
             })
             .then(r => r.json())
             .then(res => { 
@@ -448,162 +618,181 @@
                 if(res.success) { 
                     resetForm(); 
                     switchView('list'); 
-                    alert("✅ Salvat!"); 
+                    alert("✅ Salvat Online!"); 
+                    refreshDashboard();
+                } else { 
+                    alert(res.error); 
+                } 
+            })
+            .catch(e => { 
+                hideLoader();
+                if(confirm("Eroare conexiune. Salvezi OFFLINE?")) {
+                    saveToQueue(payload);
+                    alert("💾 Salvat OFFLINE.");
+                    switchView('list');
+                }
+            });
+        } else {
+            // OFFLINE
+            saveToQueue(payload);
+            alert("💾 Salvat OFFLINE (Coadă).");
+            switchView('list');
+        }
+    }
+
+    function populateLists(data) {
+        GLOBAL_SOFERI = data.soferi || [];
+        GLOBAL_AUTO = data.auto || [];
+        setupCustomDropdown('soferInput', 'soferList', GLOBAL_SOFERI);
+        setupCustomDropdown('autoInput', 'autoList', GLOBAL_AUTO);
+    }
+
+    function setupCustomDropdown(inputId, listId, dataArray) {
+        const input = document.getElementById(inputId);
+        const list = document.getElementById(listId);
+        if(!input || !list) return;
+        const renderList = (filterText = '') => {
+            list.innerHTML = '';
+            const filtered = dataArray.filter(item => item && item.toLowerCase().includes(filterText.toLowerCase()));
+            if(filtered.length === 0) { list.style.display = 'none'; return; }
+            filtered.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'custom-dropdown-item'; div.textContent = item;
+                div.onclick = () => { input.value = item; list.style.display = 'none'; };
+                list.appendChild(div);
+            });
+            list.style.display = 'block';
+        };
+        input.addEventListener('input', (e) => renderList(e.target.value));
+        input.addEventListener('focus', () => renderList(input.value));
+        document.addEventListener('click', (e) => { if (!input.contains(e.target) && !list.contains(e.target)) list.style.display = 'none'; });
+    }
+
+    function refreshDashboard() { 
+        if(!navigator.onLine) return;
+        showLoader("Se sincronizează..."); 
+        fetch(`${SCRIPT_URL}?actiune=getBonuri&email=${encodeURIComponent(CURRENT_USER_EMAIL)}`)
+        .then(r => r.json())
+        .then(renderDashboard)
+        .catch(e => { hideLoader(); console.error(e); });
+    }
+
+    function renderDashboard(data) {
+        hideLoader();
+        const acc = document.getElementById('monthAccordion');
+        acc.innerHTML = '';
+        const noData = document.getElementById('no-data-state');
+        
+        if(!data || data.length === 0) { 
+            noData.classList.remove('hidden'); 
+            return; 
+        }
+        noData.classList.add('hidden');
+
+        const tree = {};
+        data.forEach(row => {
+            const d = new Date(row.data);
+            const mon = d.toLocaleDateString('ro-RO', { month: 'long', year: 'numeric' }).toUpperCase();
+            const supp = row.furnizor || 'NECUNOSCUT';
+            if(!tree[mon]) tree[mon] = {};
+            if(!tree[mon][supp]) tree[mon][supp] = [];
+            tree[mon][supp].push(row);
+        });
+
+        let idx = 0;
+        for (const [mon, suppliers] of Object.entries(tree)) {
+            idx++;
+            const item = document.createElement('div');
+            item.className = 'accordion-item'; 
+            item.innerHTML = `
+                <h2 class="accordion-header"><button class="accordion-button collapsed rounded-4" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${idx}"><i class="fa-regular fa-calendar-alt me-2"></i> ${mon}</button></h2>
+                <div id="collapse${idx}" class="accordion-collapse collapse" data-bs-parent="#monthAccordion"><div class="accordion-body" id="body${idx}"></div></div>
+            `;
+            acc.appendChild(item);
+            const bodyDiv = item.querySelector(`#body${idx}`);
+            let subIdx = 0;
+            for (const [supp, rows] of Object.entries(suppliers)) {
+                subIdx++;
+                const subId = `sub${idx}_${subIdx}`;
+                const subAcc = document.createElement('div');
+                subAcc.className = 'accordion mt-2';
+                subAcc.innerHTML = `
+                    <div class="accordion-item border-0"><h2 class="accordion-header"><button class="accordion-button collapsed ps-3 bg-white shadow-sm border" type="button" data-bs-toggle="collapse" data-bs-target="#${subId}"><span class="text-dark fw-bold">${supp}</span> <span class="badge rounded-pill ms-auto px-3 py-2" style="background: var(--primary-gradient); font-weight:600;">${rows.length}</span></button></h2><div id="${subId}" class="accordion-collapse collapse"><div class="list-container-${subId} pt-2"></div></div></div>
+                `;
+                bodyDiv.appendChild(subAcc);
+                const listDiv = subAcc.querySelector(`.list-container-${subId}`);
+                rows.forEach(r => {
+                    const rowEl = document.createElement('div');
+                    rowEl.className = 'bon-row-container d-flex justify-content-between align-items-center';
+                    rowEl.innerHTML = `
+                        <div class="d-flex flex-column" onclick="showDetails(this.closest('.bon-row-container').dataset.row)">
+                            <span class="text-date-blue mb-1"><i class="fa-regular fa-calendar me-1"></i> ${new Date(r.data).toLocaleDateString('ro-RO')}</span>
+                            <span class="fw-bold text-dark mb-1" style="font-size:0.9rem;">${r.sofer || 'Nespecificat'}</span>
+                            <small class="text-muted">Nr bon: <strong>${r.nr_bon || '-'}</strong> &bull; Auto: <strong>${r.auto || '-'}</strong></small>
+                        </div>
+                        <div class="d-flex flex-column align-items-end">
+                            <div class="fw-bold text-success mb-2" style="font-size: 1rem;">${parseFloat(r.suma).toFixed(2)} Lei</div>
+                            <button type="button" class="btn btn-sm btn-light border rounded-pill py-0 px-2" onclick="event.stopPropagation(); window.open('${r.linkPoza}', '_blank')"><i class="fa-solid fa-camera text-secondary small"></i></button>
+                        </div>
+                    `;
+                    rowEl.dataset.row = JSON.stringify(r);
+                    rowEl.onclick = function() { showDetails(JSON.parse(this.dataset.row)); };
+                    listDiv.appendChild(rowEl);
+                });
+            }
+        }
+    }
+
+    function showDetails(row) {
+        SELECTED_BON = row;
+        const b = document.getElementById('detailsBody');
+        document.getElementById('detailLinkImg').href = row.linkPoza;
+        b.innerHTML = `
+            <div class="row">
+               <div class="col-12 mb-3"><h6 class="text-primary fw-bold mb-2 small border-bottom pb-1">DATE GENERALE</h6><div class="row g-2"><div class="col-6"><div class="detail-label">DATA</div><div class="detail-value">${new Date(row.data).toLocaleDateString('ro-RO')}</div></div><div class="col-6"><div class="detail-label">AUTO</div><div class="detail-value">${row.auto}</div></div><div class="col-12"><div class="detail-label">ȘOFER</div><div class="detail-value">${row.sofer}</div></div></div></div>
+               <div class="col-12 mb-3"><h6 class="text-primary fw-bold mb-2 small border-bottom pb-1">CARD</h6><div class="row g-2"><div class="col-6"><div class="detail-label">FURNIZOR</div><div class="detail-value fw-bold">${row.furnizor_card || '-'}</div></div><div class="col-6"><div class="detail-label">NUMĂR</div><div class="detail-value">${row.card || '-'}</div></div><div class="col-12"><div class="detail-label">POSESOR</div><div class="detail-value">${row.posesor_card || '-'}</div></div></div></div>
+               <div class="col-12 mb-3"><h6 class="text-primary fw-bold mb-2 small border-bottom pb-1">COMBUSTIBIL</h6><div class="row g-2"><div class="col-6"><div class="detail-label">NR. BON</div><div class="detail-value fw-bold text-dark">${row.nr_bon}</div></div><div class="col-6"><div class="detail-label">FURNIZOR</div><div class="detail-value fw-bold">${row.furnizor}</div></div><div class="col-12"><div class="detail-label">PRODUS</div><div class="detail-value">${row.produs}</div></div><div class="col-12"><div class="detail-label">STAȚIE</div><div class="detail-value">${row.statie}</div></div><div class="col-6"><div class="detail-label">CANTITATE</div><div class="detail-value">${row.litri} L</div></div></div></div>
+               <div class="col-12"><h6 class="text-primary fw-bold mb-2 small border-bottom pb-1">DETALII FINANCIARE</h6><div class="row g-2 mb-3"><div class="col-4"><div class="detail-label">PREȚ/L (FĂRĂ TVA)</div><div class="detail-sub-value">${parseFloat(row.pret_fara_tva || 0).toFixed(2)}</div></div><div class="col-4"><div class="detail-label">TVA/L</div><div class="detail-sub-value">${parseFloat(row.tva_pret || 0).toFixed(2)}</div></div><div class="col-4"><div class="detail-label">PREȚ/L (TVA)</div><div class="detail-value fw-bold text-end">${parseFloat(row.pret).toFixed(2)}</div></div></div><div class="bg-light p-3 rounded-4 border"><div class="d-flex justify-content-between mb-1"><span class="detail-label text-muted">TOTAL BAZĂ</span><span class="fw-bold">${parseFloat(row.suma_fara_tva || 0).toFixed(2)}</span></div><div class="d-flex justify-content-between mb-2 pb-2 border-bottom"><span class="detail-label text-muted">TOTAL TVA</span><span class="fw-bold">${parseFloat(row.tva_suma || 0).toFixed(2)}</span></div><div class="d-flex justify-content-between align-items-center"><span class="fw-bold text-dark">TOTAL FACTURĂ</span><span class="display-6 fw-bold text-success">${parseFloat(row.suma).toFixed(2)} <span class="fs-6 text-muted">RON</span></span></div></div></div>
+            </div>`;
+        detailsModal.show();
+    }
+
+    function confirmDelete() { 
+        if(!navigator.onLine) { alert("Ștergerea funcționează doar Online!"); return; }
+        if(!SELECTED_BON) return; 
+        if(confirm("ATENȚIE: Ștergi acest bon permanent?")) { 
+            showLoader("Se șterge..."); 
+            detailsModal.hide(); 
+            
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    actiune: 'deleteBon',
+                    idBon: SELECTED_BON.id,
+                    email: CURRENT_USER_EMAIL
+                })
+            })
+            .then(r => r.json())
+            .then(res => { 
+                hideLoader(); 
+                if(res.success) { 
+                    refreshDashboard(); 
                 } else { 
                     alert(res.error); 
                 } 
             })
             .catch(e => handleError(e));
-        }
-
-        function populateLists(data) {
-            GLOBAL_SOFERI = data.soferi || [];
-            GLOBAL_AUTO = data.auto || [];
-            setupCustomDropdown('soferInput', 'soferList', GLOBAL_SOFERI);
-            setupCustomDropdown('autoInput', 'autoList', GLOBAL_AUTO);
-        }
-
-        function setupCustomDropdown(inputId, listId, dataArray) {
-            const input = document.getElementById(inputId);
-            const list = document.getElementById(listId);
-            if(!input || !list) return;
-            const renderList = (filterText = '') => {
-                list.innerHTML = '';
-                const filtered = dataArray.filter(item => item && item.toLowerCase().includes(filterText.toLowerCase()));
-                if(filtered.length === 0) { list.style.display = 'none'; return; }
-                filtered.forEach(item => {
-                    const div = document.createElement('div');
-                    div.className = 'custom-dropdown-item'; div.textContent = item;
-                    div.onclick = () => { input.value = item; list.style.display = 'none'; };
-                    list.appendChild(div);
-                });
-                list.style.display = 'block';
-            };
-            input.addEventListener('input', (e) => renderList(e.target.value));
-            input.addEventListener('focus', () => renderList(input.value));
-            document.addEventListener('click', (e) => { if (!input.contains(e.target) && !list.contains(e.target)) list.style.display = 'none'; });
-        }
-
-        function refreshDashboard() { 
-            showLoader("Se sincronizează..."); 
-            // --- FETCH GET ---
-            fetch(`${SCRIPT_URL}?actiune=getBonuri&email=${encodeURIComponent(CURRENT_USER_EMAIL)}`)
-            .then(r => r.json())
-            .then(renderDashboard)
-            .catch(e => { hideLoader(); console.error(e); });
-        }
-
-        function renderDashboard(data) {
-            hideLoader();
-            const acc = document.getElementById('monthAccordion');
-            acc.innerHTML = '';
-            const noData = document.getElementById('no-data-state');
-            
-            if(!data || data.length === 0) { 
-                noData.classList.remove('hidden'); 
-                return; 
-            }
-            noData.classList.add('hidden');
-
-            const tree = {};
-            data.forEach(row => {
-                const d = new Date(row.data);
-                const mon = d.toLocaleDateString('ro-RO', { month: 'long', year: 'numeric' }).toUpperCase();
-                const supp = row.furnizor || 'NECUNOSCUT';
-                if(!tree[mon]) tree[mon] = {};
-                if(!tree[mon][supp]) tree[mon][supp] = [];
-                tree[mon][supp].push(row);
-            });
-
-            let idx = 0;
-            for (const [mon, suppliers] of Object.entries(tree)) {
-                idx++;
-                const item = document.createElement('div');
-                item.className = 'accordion-item'; 
-                item.innerHTML = `
-                    <h2 class="accordion-header"><button class="accordion-button collapsed rounded-4" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${idx}"><i class="fa-regular fa-calendar-alt me-2"></i> ${mon}</button></h2>
-                    <div id="collapse${idx}" class="accordion-collapse collapse" data-bs-parent="#monthAccordion"><div class="accordion-body" id="body${idx}"></div></div>
-                `;
-                acc.appendChild(item);
-                const bodyDiv = item.querySelector(`#body${idx}`);
-                let subIdx = 0;
-                for (const [supp, rows] of Object.entries(suppliers)) {
-                    subIdx++;
-                    const subId = `sub${idx}_${subIdx}`;
-                    const subAcc = document.createElement('div');
-                    subAcc.className = 'accordion mt-2';
-                    subAcc.innerHTML = `
-                        <div class="accordion-item border-0"><h2 class="accordion-header"><button class="accordion-button collapsed ps-3 bg-white shadow-sm border" type="button" data-bs-toggle="collapse" data-bs-target="#${subId}"><span class="text-dark fw-bold">${supp}</span> <span class="badge rounded-pill ms-auto px-3 py-2" style="background: var(--primary-gradient); font-weight:600;">${rows.length}</span></button></h2><div id="${subId}" class="accordion-collapse collapse"><div class="list-container-${subId} pt-2"></div></div></div>
-                    `;
-                    bodyDiv.appendChild(subAcc);
-                    const listDiv = subAcc.querySelector(`.list-container-${subId}`);
-                    rows.forEach(r => {
-                        const rowEl = document.createElement('div');
-                        rowEl.className = 'bon-row-container d-flex justify-content-between align-items-center';
-                        rowEl.innerHTML = `
-                            <div class="d-flex flex-column" onclick="showDetails(this.closest('.bon-row-container').dataset.row)">
-                                <span class="text-date-blue mb-1"><i class="fa-regular fa-calendar me-1"></i> ${new Date(r.data).toLocaleDateString('ro-RO')}</span>
-                                <span class="fw-bold text-dark mb-1" style="font-size:0.9rem;">${r.sofer || 'Nespecificat'}</span>
-                                <small class="text-muted">Nr bon: <strong>${r.nr_bon || '-'}</strong> &bull; Auto: <strong>${r.auto || '-'}</strong></small>
-                            </div>
-                            <div class="d-flex flex-column align-items-end">
-                                <div class="fw-bold text-success mb-2" style="font-size: 1rem;">${parseFloat(r.suma).toFixed(2)} Lei</div>
-                                <button type="button" class="btn btn-sm btn-light border rounded-pill py-0 px-2" onclick="event.stopPropagation(); window.open('${r.linkPoza}', '_blank')"><i class="fa-solid fa-camera text-secondary small"></i></button>
-                            </div>
-                        `;
-                        rowEl.dataset.row = JSON.stringify(r);
-                        rowEl.onclick = function() { showDetails(JSON.parse(this.dataset.row)); };
-                        listDiv.appendChild(rowEl);
-                    });
-                }
-            }
-        }
-
-        function showDetails(row) {
-            SELECTED_BON = row;
-            const b = document.getElementById('detailsBody');
-            document.getElementById('detailLinkImg').href = row.linkPoza;
-            b.innerHTML = `
-                <div class="row">
-                   <div class="col-12 mb-3"><h6 class="text-primary fw-bold mb-2 small border-bottom pb-1">DATE GENERALE</h6><div class="row g-2"><div class="col-6"><div class="detail-label">DATA</div><div class="detail-value">${new Date(row.data).toLocaleDateString('ro-RO')}</div></div><div class="col-6"><div class="detail-label">AUTO</div><div class="detail-value">${row.auto}</div></div><div class="col-12"><div class="detail-label">ȘOFER</div><div class="detail-value">${row.sofer}</div></div></div></div>
-                   <div class="col-12 mb-3"><h6 class="text-primary fw-bold mb-2 small border-bottom pb-1">CARD</h6><div class="row g-2"><div class="col-6"><div class="detail-label">FURNIZOR</div><div class="detail-value fw-bold">${row.furnizor_card || '-'}</div></div><div class="col-6"><div class="detail-label">NUMĂR</div><div class="detail-value">${row.card || '-'}</div></div><div class="col-12"><div class="detail-label">POSESOR</div><div class="detail-value">${row.posesor_card || '-'}</div></div></div></div>
-                   <div class="col-12 mb-3"><h6 class="text-primary fw-bold mb-2 small border-bottom pb-1">COMBUSTIBIL</h6><div class="row g-2"><div class="col-6"><div class="detail-label">NR. BON</div><div class="detail-value fw-bold text-dark">${row.nr_bon}</div></div><div class="col-6"><div class="detail-label">FURNIZOR</div><div class="detail-value fw-bold">${row.furnizor}</div></div><div class="col-12"><div class="detail-label">PRODUS</div><div class="detail-value">${row.produs}</div></div><div class="col-12"><div class="detail-label">STAȚIE</div><div class="detail-value">${row.statie}</div></div><div class="col-6"><div class="detail-label">CANTITATE</div><div class="detail-value">${row.litri} L</div></div></div></div>
-                   <div class="col-12"><h6 class="text-primary fw-bold mb-2 small border-bottom pb-1">DETALII FINANCIARE</h6><div class="row g-2 mb-3"><div class="col-4"><div class="detail-label">PREȚ/L (FĂRĂ TVA)</div><div class="detail-sub-value">${parseFloat(row.pret_fara_tva || 0).toFixed(2)}</div></div><div class="col-4"><div class="detail-label">TVA/L</div><div class="detail-sub-value">${parseFloat(row.tva_pret || 0).toFixed(2)}</div></div><div class="col-4"><div class="detail-label">PREȚ/L (TVA)</div><div class="detail-value fw-bold text-end">${parseFloat(row.pret).toFixed(2)}</div></div></div><div class="bg-light p-3 rounded-4 border"><div class="d-flex justify-content-between mb-1"><span class="detail-label text-muted">TOTAL BAZĂ</span><span class="fw-bold">${parseFloat(row.suma_fara_tva || 0).toFixed(2)}</span></div><div class="d-flex justify-content-between mb-2 pb-2 border-bottom"><span class="detail-label text-muted">TOTAL TVA</span><span class="fw-bold">${parseFloat(row.tva_suma || 0).toFixed(2)}</span></div><div class="d-flex justify-content-between align-items-center"><span class="fw-bold text-dark">TOTAL FACTURĂ</span><span class="display-6 fw-bold text-success">${parseFloat(row.suma).toFixed(2)} <span class="fs-6 text-muted">RON</span></span></div></div></div>
-                </div>`;
-            detailsModal.show();
-        }
-
-        function confirmDelete() { 
-            if(!SELECTED_BON) return; 
-            if(confirm("ATENȚIE: Ștergi acest bon permanent?")) { 
-                showLoader("Se șterge..."); 
-                detailsModal.hide(); 
-                
-                fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        actiune: 'deleteBon',
-                        idBon: SELECTED_BON.id,
-                        email: CURRENT_USER_EMAIL
-                    })
-                })
-                .then(r => r.json())
-                .then(res => { 
-                    hideLoader(); 
-                    if(res.success) { 
-                        refreshDashboard(); 
-                    } else { 
-                        alert(res.error); 
-                    } 
-                })
-                .catch(e => handleError(e));
-            } 
-        }
-        
-        function resetForm() { document.getElementById('bonForm').reset(); document.getElementById('hiddenPreviewImg').src=""; }
-        function showLoader(t) { document.getElementById('loaderText').innerText=t; document.getElementById('loader').style.display='flex'; }
-        function hideLoader() { document.getElementById('loader').style.display='none'; }
-        function handleError(e) { hideLoader(); alert(e); }
-    </script>
+        } 
+    }
+    
+    function resetForm() { 
+        document.getElementById('bonForm').reset(); 
+        document.getElementById('hiddenPreviewImg').src=""; 
+        document.getElementById('hiddenPreviewImg').dataset.offlineB64 = ""; // Reset offline img
+    }
+    function showLoader(t) { document.getElementById('loaderText').innerText=t; document.getElementById('loader').style.display='flex'; }
+    function hideLoader() { document.getElementById('loader').style.display='none'; }
+    function handleError(e) { hideLoader(); alert(e); }
+</script>
 </body>
 </html>
