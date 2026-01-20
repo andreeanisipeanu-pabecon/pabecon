@@ -11,91 +11,248 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   
   <style>
-    :root { --primary-gradient: linear-gradient(135deg, #0061f2 0%, #69a6ce 100%); --bg-light: #f8f9fa; --text-dark: #2d3748; --accent-color: #0061f2; }
-    body { background-color: var(--bg-light); font-family: 'Poppins', sans-serif; color: var(--text-dark); padding-top: 140px; padding-bottom: 80px; margin: 0; }
-    
-    .fixed-header-wrapper { position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; background-color: var(--bg-light); box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
-    .app-header { background: var(--primary-gradient); color: white; padding: 15px 20px 50px; border-radius: 0 0 30px 30px; display: flex; justify-content: space-between; align-items: center; }
+    :root {
+      --primary-gradient: linear-gradient(135deg, #0061f2 0%, #69a6ce 100%);
+      --bg-light: #f8f9fa;
+      --text-dark: #2d3748;
+      --accent-color: #0061f2;
+    }
+
+    body { 
+        background-color: var(--bg-light); 
+        font-family: 'Poppins', sans-serif; 
+        color: var(--text-dark); 
+        -webkit-font-smoothing: antialiased; 
+        padding-top: 160px; 
+        padding-bottom: 80px; 
+        margin: 0;
+    }
+
+    /* --- HEADER FIX --- */
+    .fixed-header-wrapper {
+        position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
+        background-color: var(--bg-light);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    }
+
+    .app-header { 
+        background: var(--primary-gradient); 
+        color: white; 
+        padding: 15px 20px 50px; 
+        border-radius: 0 0 30px 30px; 
+        position: relative; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+    }
     .header-title { font-weight: 700; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
     .user-pill { background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; font-size: 0.85rem; display: flex; align-items: center; gap: 5px; backdrop-filter: blur(5px); }
-    .top-nav { display: flex; justify-content: center; gap: 10px; margin-top: -25px; margin-bottom: 10px; padding: 0 15px; }
-    .nav-pill-btn { border: none; padding: 12px 0; border-radius: 50px; font-weight: 600; font-size: 0.9rem; box-shadow: 0 4px 10px rgba(0,0,0,0.08); transition: 0.3s; flex: 1; text-align: center; max-width: 200px; cursor: pointer; }
+    
+    .top-nav { 
+        display: flex; 
+        justify-content: center; 
+        gap: 10px; 
+        margin-top: -25px; 
+        margin-bottom: 10px; 
+        position: relative; 
+        padding: 0 15px;
+    }
+    .nav-pill-btn { 
+        border: none; padding: 12px 0; border-radius: 50px; font-weight: 600; font-size: 0.9rem; 
+        box-shadow: 0 4px 10px rgba(0,0,0,0.08); transition: 0.3s; flex: 1; text-align: center; max-width: 200px; 
+        cursor: pointer;
+    }
     .nav-pill-btn.active { background: #2d3748; color: white; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.15); }
     .nav-pill-btn:not(.active) { background: white; color: #4a5568; }
-    
-    .responsive-container { width: 100%; padding: 0 15px; margin: 0 auto; }
-    @media (min-width: 768px) { .responsive-container { max-width: 95%; } }
+    .nav-pill-btn:not(.active):active { transform: scale(0.95); background: #f8f9fa; }
 
-    /* Cards & Lists */
-    .trip-card { background: white; border-radius: 16px; padding: 12px 18px; margin-bottom: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); border-left: 4px solid var(--accent-color); cursor: pointer; transition: 0.2s; }
+    .responsive-container { width: 100%; padding-right: 15px; padding-left: 15px; margin-right: auto; margin-left: auto; }
+    @media (min-width: 768px) { .responsive-container { max-width: 95%; padding-right: 40px; padding-left: 40px; } }
+    @media (min-width: 1200px) { .responsive-container { max-width: 1400px; } }
+
+    /* --- ACCORDION LUNA --- */
+    .accordion-item { border: none; background: transparent; margin-bottom: 15px; }
+    
+    .accordion-button { 
+        border-radius: 15px !important; 
+        box-shadow: 0 2px 5px rgba(0,0,0,0.03); 
+        color: #4a5568; 
+        font-weight: 700; 
+        padding: 15px; 
+        background: white;
+        font-size: 1rem;
+        display: flex;
+        justify-content: space-between; 
+        align-items: center;
+    }
+    .accordion-button::after { display: none; }
+    
+    .accordion-button:not(.collapsed) { 
+        background: #eef5ff; 
+        color: var(--accent-color); 
+    }
+    .month-chevron { transition: transform 0.3s; }
+    .accordion-button:not(.collapsed) .month-chevron { transform: rotate(180deg); }
+
+    .accordion-body { padding: 10px 5px; }
+
+    /* --- SUB-ACCORDION SANTIER --- */
+    .sub-accordion-btn {
+        background: white !important;
+        border: 1px solid #eef2f7;
+        margin-top: 6px;
+        border-radius: 12px !important;
+        padding: 10px 15px; 
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #4a5568;
+        width: 100%;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+    }
+    
+    .site-name-container { justify-self: start; text-align: left; }
+    .site-badge-container { justify-self: center; }
+    .site-arrow-container { justify-self: end; }
+
+    .site-badge {
+        background: var(--primary-gradient);
+        color: white;
+        font-size: 0.75rem;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-weight: 700;
+    }
+    
+    .fa-chevron-down.site-chev { transition: transform 0.3s; font-size: 0.8rem; color: #a0aec0; }
+    .sub-accordion-btn[aria-expanded="true"] .fa-chevron-down.site-chev { transform: rotate(180deg); color: var(--accent-color); }
+
+    /* --- TRIP CARD --- */
+    .trip-card { 
+        background: white; 
+        border-radius: 16px; 
+        padding: 12px 18px; 
+        margin-bottom: 8px; 
+        box-shadow: 0 2px 6px rgba(0,0,0,0.03); 
+        border-left: 4px solid var(--accent-color); 
+        position: relative; 
+        cursor: pointer; 
+        transition: 0.2s; 
+        width: 100%;
+    }
     .trip-card:active { transform: scale(0.98); background: #fafafa; }
-    .trip-date { font-size: 0.75rem; color: var(--accent-color); font-weight: 700; text-transform: uppercase; margin-bottom: 3px; display: flex; align-items: center; gap: 5px; }
+    
+    .trip-date { 
+        font-size: 0.75rem; 
+        color: var(--accent-color); 
+        font-weight: 700; 
+        text-transform: uppercase; 
+        margin-bottom: 3px; 
+        display: flex; align-items: center; gap: 5px;
+    }
     .trip-main { font-weight: 700; font-size: 0.95rem; color: #1a202c; margin-bottom: 2px; }
     .trip-sub { font-size: 0.8rem; color: #718096; display: flex; align-items: center; gap: 5px; }
-    .trip-amount { font-size: 0.95rem; font-weight: 700; color: #16a34a; position: absolute; top: 15px; right: 15px; }
+    .trip-amount { 
+        font-size: 0.95rem; 
+        font-weight: 700; 
+        color: #16a34a; 
+        position: absolute; 
+        top: 15px; 
+        right: 15px; 
+    }
 
-    /* Form Styles */
+    /* --- BUTON ACTUALIZEAZA --- */
+    .refresh-container {
+        display: flex; 
+        justify-content: flex-end; 
+        margin-bottom: 15px;
+        padding-right: 5px;
+        margin-top: 15px;
+    }
+    .btn-refresh-custom {
+        background-color: #edf2f7; 
+        color: #4a5568; 
+        border: none;
+        font-weight: 600;
+        font-size: 0.8rem; 
+        padding: 8px 18px; 
+        border-radius: 20px;
+        transition: 0.2s;
+        display: flex; align-items: center; gap: 5px;
+    }
+    .btn-refresh-custom:hover { background-color: #cbd5e0; color: #2d3748; }
+
+    /* --- ALTELE --- */
+    .detail-section { margin-bottom: 20px; border-bottom: 1px solid #f0f0f0; padding-bottom: 15px; }
+    .detail-section:last-child { border-bottom: none; }
+    .detail-section-title { font-size: 0.75rem; color: var(--accent-color); font-weight: 700; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 0.5px; }
+    .detail-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; }
+    .detail-label { color: #718096; font-weight: 500; text-transform: uppercase; font-size: 0.8rem; }
+    .detail-val { font-weight: 600; color: #2d3748; text-align: right; max-width: 65%; }
+
     .form-container-width { max-width: 600px; margin: 0 auto; }
-    .form-control { border-radius: 12px; padding: 12px; border: 1px solid #e2e8f0; }
-    .form-section-title { color: var(--accent-color); font-weight: 700; margin: 20px 0 10px; font-size: 0.9rem; text-transform: uppercase; }
-    .photo-box { border: 2px dashed #cbd5e0; border-radius: 12px; padding: 15px; text-align: center; color: #a0aec0; background: #fff; cursor: pointer; transition: 0.2s; }
-    .photo-box.has-file { border-color: #16a34a; color: #16a34a; background: #f0fdf4; font-weight: bold; }
-    
-    /* Autocomplete */
+    .form-control, .form-select { border-radius: 12px; border: 1px solid #e2e8f0; padding: 12px; font-size: 0.95rem; }
+    .form-control:focus { border-color: var(--accent-color); box-shadow: 0 0 0 3px rgba(0, 97, 242, 0.1); }
+    .form-section-title { color: var(--accent-color); font-weight: 700; margin: 25px 0 10px; font-size: 0.9rem; text-transform: uppercase; }
+
     .autocomplete-wrapper { position: relative; }
-    .autocomplete-list { position: absolute; top: 100%; left: 0; width: 100%; background: white; border-radius: 12px; max-height: 200px; overflow-y: auto; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: none; }
-    .autocomplete-item { padding: 12px; border-bottom: 1px solid #f7f7f7; cursor: pointer; }
-    
-    /* Utils */
+    .autocomplete-list { position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid #eee; border-radius: 12px; max-height: 200px; overflow-y: auto; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: none; }
+    .autocomplete-item { padding: 12px; border-bottom: 1px solid #f7f7f7; font-size: 0.9rem; cursor: pointer; }
+    .autocomplete-item:hover { background: #f0f4ff; }
+    .photo-box { border: 2px dashed #cbd5e0; border-radius: 12px; padding: 15px; text-align: center; color: #a0aec0; background: #fff; cursor: pointer; }
+    .photo-box.has-file { border-color: #16a34a; color: #16a34a; background: #f0fdf4; }
     .hidden { display: none !important; }
     #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); z-index:9999; display:flex; justify-content:center; align-items:center; flex-direction:column; }
-    .btn-back { background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 50px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-right: 10px; cursor: pointer; }
     
-    /* Accordion Custom */
-    .accordion-button { border-radius: 15px !important; margin-bottom: 5px; font-weight: 600; color: #4a5568; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
-    .accordion-button:not(.collapsed) { color: var(--accent-color); background: #eef5ff; }
-    .accordion-item { border: none; background: transparent; margin-bottom: 10px; }
-    .sub-accordion-btn { background: white; border: 1px solid #eef2f7; margin-top: 6px; border-radius: 12px !important; padding: 10px 15px; font-weight: 600; font-size: 0.85rem; color: #4a5568; width: 100%; box-shadow: 0 1px 2px rgba(0,0,0,0.02); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
-    
-    .site-badge { background: var(--primary-gradient); color: white; font-size: 0.75rem; padding: 4px 12px; border-radius: 20px; font-weight: 700; }
-    .site-arrow-container { justify-self: end; }
-    .fa-chevron-down.site-chev { transition: transform 0.3s; }
-    .sub-accordion-btn[aria-expanded="true"] .site-chev { transform: rotate(180deg); color: var(--accent-color); }
+    /* Buton Inapoi */
+    .btn-back { background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 50px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-right: 10px; cursor: pointer; transition: 0.2s; }
+    .btn-back:hover { background: rgba(255,255,255,0.3); }
+
   </style>
 </head>
 <body>
 
   <div id="loader">
     <div class="spinner-border text-primary" role="status"></div>
-    <div class="mt-2 fw-bold text-muted" id="loaderText">Se inițializează...</div>
+    <div class="mt-2 fw-bold text-muted" id="loaderText">Se sincronizează...</div>
   </div>
 
   <div id="main-app" class="hidden">
+    
     <div class="fixed-header-wrapper">
         <div class="app-header">
           <div class="d-flex align-items-center">
               <button class="btn-back" onclick="window.location.href='index.html'"><i class="fa-solid fa-arrow-left"></i></button>
-              <div class="header-title ms-2"><i class="fas fa-truck-moving"></i> Transport</div>
+              <div class="header-title">
+                  <i class="fas fa-truck-moving"></i> Transport
+              </div>
           </div>
           <div class="d-flex align-items-center gap-2">
-              <div id="netStatus" class="badge bg-success rounded-pill d-flex align-items-center gap-1 shadow-sm" style="font-size:0.75rem;">
+              <div id="netStatus" class="badge bg-success rounded-pill d-flex align-items-center gap-1 shadow-sm" style="font-size:0.75rem; transition:0.3s;">
                   <i class="fas fa-wifi"></i> <span>ONLINE</span>
               </div>
               <div class="user-pill"><i class="fas fa-user-circle"></i> <span id="userDisplay">User</span></div>
           </div>
         </div>
+
         <div class="top-nav">
-           <button class="nav-pill-btn active" id="tab-list" onclick="switchView('list')">Istoric</button>
-           <button class="nav-pill-btn" id="tab-add" onclick="openAddScreen()">Adaugă</button>
+           <button class="nav-pill-btn active" id="tab-list" onclick="switchView('list')">Istoric Curse</button>
+           <button class="nav-pill-btn" id="tab-add" onclick="switchView('add')">Adaugă Cursă</button>
         </div>
-        <div id="syncMessage" class="bg-warning text-dark text-center py-1 small fw-bold hidden"></div>
+        
+        <div id="syncMessage" class="bg-warning text-dark text-center py-1 small fw-bold hidden">
+            <i class="fas fa-sync fa-spin"></i> Se sincronizează datele salvate offline...
+        </div>
     </div>
 
     <div class="responsive-container">
+      
       <div id="view-list">
-        <div class="text-end mb-3 mt-3">
-             <button type="button" class="btn btn-sm rounded-pill btn-light border fw-bold text-secondary" onclick="loadHistory()">
-                <i class="fa-solid fa-rotate me-1"></i> Actualizează
+        <div class="refresh-container">
+             <button type="button" class="btn-refresh-custom shadow-sm" onclick="loadHistory()">
+                <i class="fa-solid fa-rotate"></i> Actualizează
              </button>
         </div>
         <div id="trips-container" class="pb-5"></div>
@@ -104,107 +261,73 @@
       <div id="view-add" class="hidden pb-5">
          <div class="form-container-width">
              <form id="transportForm" onsubmit="handleSubmit(event)">
-                <input type="hidden" id="editId">
-                <input type="file" id="universalCameraInput" accept="image/*" style="display:none" onchange="processScanResult()">
+                <input type="hidden" id="editId"> 
                 
                 <div class="card p-3 border-0 shadow-sm mb-3">
-                  <div class="form-section-title mt-0"><i class="fa-solid fa-user-tag me-2"></i>Identificare</div>
+                  <div class="form-section-title"><i class="far fa-calendar-alt me-2"></i>General</div>
+                  <div class="row">
+                     <div class="col-6 mb-3"><label class="small text-muted fw-bold">Data Cursă</label><input type="date" class="form-control" id="dataTransport" required></div>
+                     <div class="col-6 mb-3"><label class="small text-muted fw-bold">Data Facturare</label><input type="date" class="form-control" id="dataFacturare" required></div>
+                  </div>
                   <div class="mb-3">
                      <label class="small text-muted fw-bold">Șofer</label>
-                     <input type="text" class="form-control bg-light fw-bold" id="sofer" readonly>
+                     <input type="text" class="form-control bg-light" id="sofer" readonly>
                   </div>
                   <div class="mb-3">
                      <label class="small text-muted fw-bold">Auto</label>
-                     <div class="autocomplete-wrapper"><input type="text" class="form-control fw-bold" id="numarAuto" placeholder="Caută..." required autocomplete="off"><div id="list-numarAuto" class="autocomplete-list"></div></div>
+                     <div class="autocomplete-wrapper"><input type="text" class="form-control" id="numarAuto" placeholder="Caută..." required><div id="list-numarAuto" class="autocomplete-list"></div></div>
                   </div>
-                  <div class="mb-3">
-                     <label class="small text-muted fw-bold">Șantier (Punct Lucru)</label>
-                     <div class="autocomplete-wrapper"><input type="text" class="form-control fw-bold" id="santier" required autocomplete="off"><div id="list-santier" class="autocomplete-list"></div></div>
-                  </div>
-                </div>
-
-                <div id="fullDetailsContainer">
-                    <div class="alert alert-info small py-2"><i class="fas fa-magic me-1"></i> Date completate de AI (Online)</div>
-                    
-                    <div class="card p-3 border-0 shadow-sm mb-3">
-                      <div class="row">
-                         <div class="col-6 mb-3"><label class="small text-muted fw-bold">Data Cursă</label><input type="date" class="form-control" id="dataTransport" required></div>
-                         <input type="hidden" id="dataFacturare">
-                      </div>
-                      <div class="row">
-                          <div class="col-6 mb-3"><label class="small text-muted fw-bold">Încărcare</label><div class="autocomplete-wrapper"><input type="text" class="form-control" id="locIncarcare"><div id="list-locIncarcare" class="autocomplete-list"></div></div></div>
-                          <div class="col-6 mb-3"><label class="small text-muted fw-bold">Descărcare</label><div class="autocomplete-wrapper"><input type="text" class="form-control" id="locDescarcare"><div id="list-locDescarcare" class="autocomplete-list"></div></div></div>
-                      </div>
-                      <div class="mb-3"><label class="small text-muted fw-bold">Material</label><div class="autocomplete-wrapper"><input type="text" class="form-control" id="material"><div id="list-material" class="autocomplete-list"></div></div></div>
-                    </div>
                 </div>
 
                 <div class="card p-3 border-0 shadow-sm mb-3">
-                    <div class="form-section-title d-flex justify-content-between align-items-center mt-0">
-                        <span><i class="fas fa-file-invoice me-2"></i>Documente</span>
-                    </div>
-
-                    <div class="p-2 mb-3 border rounded bg-light position-relative">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="fw-bold text-primary small m-0">AVIZ 1</h6>
-                            <button type="button" class="btn btn-sm btn-primary rounded-pill fw-bold px-3" onclick="startScan('aviz1')"><i class="fas fa-camera me-1"></i> SCAN</button>
-                        </div>
-                        
-                        <div id="fieldsAviz1">
-                            <div class="row mb-2">
-                                <div class="col-6"><label class="small text-muted fw-bold">Nr Aviz</label><input type="number" class="form-control fw-bold" id="numarAviz1"></div>
-                                <div class="col-6"><label class="small text-muted fw-bold">Tone</label><input type="number" step="0.01" class="form-control fw-bold" id="toneAviz1"></div>
-                            </div>
-                        </div>
-                        
-                        <div class="d-flex gap-2">
-                            <div class="photo-box flex-fill bg-white" id="box_fileAviz1" onclick="triggerPhoto('fileAviz1')"><i class="fas fa-image"></i> Poză<input type="file" id="fileAviz1" hidden onchange="previewFile(this)"></div>
-                            <div class="photo-box flex-fill bg-white" onclick="triggerPhoto('fileTichet1')"><i class="fas fa-ticket-alt"></i> Tichet<input type="file" id="fileTichet1" hidden onchange="previewFile(this)"></div>
-                        </div>
-                    </div>
-
-                    <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" id="checkAviz2" onchange="toggleDiv('secAviz2', this.checked)">
-                        <label class="form-check-label fw-bold small text-muted">Al doilea aviz?</label>
-                    </div>
-                    <div id="secAviz2" class="hidden p-2 mb-3 border rounded bg-light">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="fw-bold text-primary small m-0">AVIZ 2</h6>
-                            <button type="button" class="btn btn-sm btn-primary rounded-pill fw-bold px-3" onclick="startScan('aviz2')"><i class="fas fa-camera me-1"></i> SCAN</button>
-                        </div>
-                        <div id="fieldsAviz2" class="row mb-2">
-                            <div class="col-6"><input type="number" class="form-control" id="numarAviz2" placeholder="Nr"></div>
-                            <div class="col-6"><input type="number" step="0.01" class="form-control" id="toneAviz2" placeholder="Tone"></div>
-                        </div>
-                        <div class="photo-box bg-white" id="box_fileAviz2" onclick="triggerPhoto('fileAviz2')"><i class="fas fa-image"></i> Poză Aviz 2<input type="file" id="fileAviz2" hidden onchange="previewFile(this)"></div>
-                    </div>
-
-                    <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" id="checkDel" onchange="toggleDiv('secDel', this.checked)">
-                        <label class="form-check-label fw-bold small text-muted">Delegație?</label>
-                    </div>
-                    <div id="secDel" class="hidden p-3 bg-light rounded mb-3">
-                        <div class="d-flex justify-content-end mb-2">
-                             <button type="button" class="btn btn-sm btn-primary rounded-pill fw-bold px-3" onclick="startScan('delegatie')"><i class="fas fa-camera me-1"></i> SCAN</button>
-                        </div>
-                        <div id="fieldsDelegatie"><input type="text" class="form-control mb-2" id="numarDelegatie" placeholder="Număr Delegație"></div>
-                        <div class="photo-box bg-white" id="box_fileDelegatie" onclick="triggerPhoto('fileDelegatie')"><i class="fas fa-user-tag"></i> Poză Delegație<input type="file" id="fileDelegatie" hidden onchange="previewFile(this)"></div>
-                    </div>
-                    
-                    <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" id="checkCMR" onchange="toggleDiv('secCMR', this.checked)">
-                        <label class="form-check-label fw-bold small text-muted">CMR?</label>
-                    </div>
-                    <div id="secCMR" class="hidden p-3 bg-light rounded mb-3">
-                        <div class="photo-box bg-white" onclick="triggerPhoto('fileCMR')"><i class="fas fa-file"></i> Poza CMR<input type="file" id="fileCMR" hidden onchange="previewFile(this)"></div>
-                    </div>
+                   <div class="form-section-title"><i class="fas fa-map-marker-alt me-2"></i>Locație & Marfă</div>
+                   <div class="mb-3"><label class="small text-muted fw-bold">Șantier</label><div class="autocomplete-wrapper"><input type="text" class="form-control" id="santier" required><div id="list-santier" class="autocomplete-list"></div></div></div>
+                   <div class="row">
+                      <div class="col-6 mb-3"><label class="small text-muted fw-bold">Încărcare</label><div class="autocomplete-wrapper"><input type="text" class="form-control" id="locIncarcare" required><div id="list-locIncarcare" class="autocomplete-list"></div></div></div>
+                      <div class="col-6 mb-3"><label class="small text-muted fw-bold">Descărcare</label><div class="autocomplete-wrapper"><input type="text" class="form-control" id="locDescarcare" required><div id="list-locDescarcare" class="autocomplete-list"></div></div></div>
+                   </div>
+                   <div class="mb-3"><label class="small text-muted fw-bold">Material</label><div class="autocomplete-wrapper"><input type="text" class="form-control" id="material" required><div id="list-material" class="autocomplete-list"></div></div></div>
                 </div>
 
-                <div id="offlineMessage" class="hidden alert alert-warning text-center mt-3 shadow-sm border-0 rounded-4">
-                    <i class="fa-solid fa-cloud-arrow-up fa-2x mb-2 text-warning"></i><br>
-                    <strong>Mod Offline</strong><br>
-                    Doar scanează (fă poză) și apasă <b>SALVEAZĂ</b>.<br>
-                    AI-ul va completa automat datele când revine internetul.
+                <div class="card p-3 border-0 shadow-sm mb-3">
+                   <div class="form-section-title"><i class="fas fa-file-invoice me-2"></i>Documente</div>
+                   <div class="row mb-2">
+                      <div class="col-6"><label class="small text-muted fw-bold">Nr Aviz 1</label><input type="number" class="form-control" id="numarAviz1" required></div>
+                      <div class="col-6"><label class="small text-muted fw-bold">Tone</label><input type="number" step="0.01" class="form-control" id="toneAviz1" required></div>
+                   </div>
+                   <div class="d-flex gap-2 mb-3">
+                      <div class="photo-box flex-fill" onclick="triggerPhoto('fileAviz1')"><i class="fas fa-camera"></i> Aviz 1<input type="file" id="fileAviz1" hidden onchange="previewFile(this)"></div>
+                      <div class="photo-box flex-fill" onclick="triggerPhoto('fileTichet1')"><i class="fas fa-ticket-alt"></i> Tichet<input type="file" id="fileTichet1" hidden onchange="previewFile(this)"></div>
+                   </div>
+
+                   <div class="form-check form-switch mb-2">
+                      <input class="form-check-input" type="checkbox" id="checkAviz2" onchange="toggleDiv('secAviz2', this.checked)">
+                      <label class="form-check-label fw-bold">Al doilea aviz?</label>
+                   </div>
+                   <div id="secAviz2" class="hidden p-3 bg-light rounded mb-3">
+                      <div class="row mb-2">
+                         <div class="col-6"><input type="number" class="form-control" id="numarAviz2" placeholder="Nr"></div>
+                         <div class="col-6"><input type="number" step="0.01" class="form-control" id="toneAviz2" placeholder="Tone"></div>
+                      </div>
+                      <div class="photo-box" onclick="triggerPhoto('fileAviz2')"><i class="fas fa-camera"></i> Poza Aviz 2<input type="file" id="fileAviz2" hidden onchange="previewFile(this)"></div>
+                   </div>
+
+                   <div class="form-check form-switch mb-2">
+                      <input class="form-check-input" type="checkbox" id="checkCMR" onchange="toggleDiv('secCMR', this.checked)">
+                      <label class="form-check-label fw-bold">CMR?</label>
+                   </div>
+                   <div id="secCMR" class="hidden p-3 bg-light rounded mb-3">
+                      <div class="photo-box" onclick="triggerPhoto('fileCMR')"><i class="fas fa-file"></i> Poza CMR<input type="file" id="fileCMR" hidden onchange="previewFile(this)"></div>
+                   </div>
+
+                   <div class="form-check form-switch mb-2">
+                      <input class="form-check-input" type="checkbox" id="checkDel" onchange="toggleDiv('secDel', this.checked)">
+                      <label class="form-check-label fw-bold">Delegație?</label>
+                   </div>
+                   <div id="secDel" class="hidden p-3 bg-light rounded mb-3">
+                       <input type="number" class="form-control mb-2" id="numarDelegatie" placeholder="Număr">
+                       <div class="photo-box" onclick="triggerPhoto('fileDelegatie')"><i class="fas fa-user-tag"></i> Poza Delegație<input type="file" id="fileDelegatie" hidden onchange="previewFile(this)"></div>
+                   </div>
                 </div>
 
                 <div class="card p-3 border-0 shadow-sm mb-4 text-center">
@@ -216,13 +339,14 @@
                    </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow" style="background: var(--primary-gradient); border:none;">SALVEAZĂ CURSA</button>
+                <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow">SALVEAZĂ CURSA</button>
                 <div class="text-center mt-3 mb-5">
                    <a href="#" onclick="switchView('list')" class="text-muted text-decoration-none">Anulează</a>
                 </div>
              </form>
          </div>
       </div>
+
     </div>
   </div>
 
@@ -250,7 +374,6 @@
     // ==========================================
     // 1. CONFIGURARE
     // ==========================================
-    // ATENTIE: MODIFICA LINK-UL CU CEL REAL!
     const SCRIPT_URL = "https://script.google.com/a/macros/logissupport.ro/s/AKfycbz6Nyardm3ixuhS7jvs1Xt8Rq1pIUrtw4a8QdeLTjM9Oz5YEFgbdPAH1nD3o7Kw3sJM/exec"; 
     const OFFLINE_KEY = "transport_offline_queue";
 
@@ -259,17 +382,18 @@
     let FILE_CACHE = {};
     let USER_TRIPS = [];
     let CURRENT_TRIP_ID = null;
-    let ACTIVE_SCAN_TARGET = null;
 
     // ==========================================
-    // 2. INITIALIZARE
+    // 2. INITIALIZARE & RETEA
     // ==========================================
     window.onload = function() {
         showLoader("Se inițializează...");
-        requestNotificationPermission();
+        
+        // Ascultam starea retelei
         window.addEventListener('online', updateNetworkStatus);
         window.addEventListener('offline', updateNetworkStatus);
-        
+        updateNetworkStatus();
+
         const savedUser = localStorage.getItem('pabecon_user');
         if (savedUser) {
             const u = JSON.parse(savedUser);
@@ -278,49 +402,34 @@
             document.getElementById('userDisplay').innerText = u.nume;
             document.getElementById('main-app').classList.remove('hidden');
             
+            // Incarcam drop-down-uri daca avem net, altfel folosim cache (daca am avea)
             if(navigator.onLine) {
                 fetch(`${SCRIPT_URL}?actiune=getTransportDropdowns`)
-                  .then(r => r.json()).then(d => { GLOBAL_DATA = d; initApp(); })
-                  .catch(() => { initApp(); }); 
+                  .then(r => r.json())
+                  .then(d => {
+                      GLOBAL_DATA = d;
+                      initApp();
+                  })
+                  .catch(err => {
+                      hideLoader();
+                      console.error("Eroare init:", err);
+                      initApp(); 
+                  });
             } else {
-                initApp(); 
+                initApp(); // Pornim direct in mod offline
             }
-            updateNetworkStatus();
         } else {
             hideLoader();
-            alert("Nu ești logat!");
+            alert("Nu esti logat! Intra prin Portal.");
             window.location.href = 'index.html';
         }
     }
 
-    function initApp() {
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('dataTransport').value = today;
-        document.getElementById('dataFacturare').value = today;
-        document.getElementById('sofer').value = USER_INFO.nume;
-        
-        setupAutocomplete('numarAuto', 'list-numarAuto', GLOBAL_DATA.auto || []);
-        setupAutocomplete('santier', 'list-santier', GLOBAL_DATA.santiere || []);
-        setupAutocomplete('locIncarcare', 'list-locIncarcare', GLOBAL_DATA.locatii || []);
-        setupAutocomplete('locDescarcare', 'list-locDescarcare', GLOBAL_DATA.locatii || []);
-        setupAutocomplete('material', 'list-material', GLOBAL_DATA.materiale || []);
-        
-        if(navigator.onLine) loadHistory();
-        else hideLoader();
-        
-        // Initial setam vizibilitatea corecta
-        updateFormVisibility();
-    }
-
-    // ==========================================
-    // 3. UI MANAGEMENT (ONLINE / OFFLINE)
-    // ==========================================
     function updateNetworkStatus() {
         const badge = document.getElementById('netStatus');
         const queue = getQueue();
-        const isOnline = navigator.onLine;
         
-        if (isOnline) {
+        if (navigator.onLine) {
             badge.className = "badge bg-success rounded-pill d-flex align-items-center gap-1 shadow-sm";
             badge.innerHTML = `<i class="fas fa-wifi"></i> <span>ONLINE</span>`;
             if (queue.length > 0) processQueue();
@@ -328,342 +437,414 @@
             badge.className = "badge bg-danger rounded-pill d-flex align-items-center gap-1 shadow-sm";
             badge.innerHTML = `<i class="fas fa-slash"></i> <span>OFFLINE (${queue.length})</span>`;
         }
-        updateFormVisibility();
-    }
-
-    function updateFormVisibility() {
-        const fullDetails = document.getElementById('fullDetailsContainer');
-        const fieldsAviz1 = document.getElementById('fieldsAviz1');
-        const fieldsAviz2 = document.getElementById('fieldsAviz2');
-        const fieldsDel = document.getElementById('fieldsDelegatie');
-        const msg = document.getElementById('offlineMessage');
-        
-        if (navigator.onLine) {
-            // ONLINE: Aratam tot
-            fullDetails.classList.remove('hidden');
-            fieldsAviz1.classList.remove('hidden');
-            fieldsAviz2.classList.remove('hidden');
-            fieldsDel.classList.remove('hidden');
-            msg.classList.add('hidden');
-        } else {
-            // OFFLINE: Ascundem detaliile (Mod Shoot & Forget)
-            fullDetails.classList.add('hidden');
-            fieldsAviz1.classList.add('hidden');
-            fieldsAviz2.classList.add('hidden');
-            fieldsDel.classList.add('hidden');
-            msg.classList.remove('hidden');
-        }
     }
 
     // ==========================================
-    // 4. LOGICA SCANARE & AI
+    // 3. LOGICA OFFLINE (QUEUE)
     // ==========================================
-    function startScan(target) {
-        ACTIVE_SCAN_TARGET = target;
-        document.getElementById('universalCameraInput').click();
+    function getQueue() { return JSON.parse(localStorage.getItem(OFFLINE_KEY) || "[]"); }
+
+    function saveToQueue(payload) {
+        const queue = getQueue();
+        payload._tempId = Date.now();
+        payload._displayDate = new Date().toLocaleString();
+        queue.push(payload);
+        localStorage.setItem(OFFLINE_KEY, JSON.stringify(queue));
+        updateNetworkStatus();
     }
 
-    function processScanResult() {
-        const input = document.getElementById('universalCameraInput');
-        if (input.files.length === 0) return;
-        const file = input.files[0];
-        
-        showLoader("Procesare imagine...");
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-            const img = new Image();
-            img.onload = function() {
-                // Compresie + B/W
-                const c = document.createElement('canvas'); const ctx = c.getContext('2d');
-                const max = 1600; let w = img.width; let h = img.height;
-                if (w>h){if(w>max){h*=max/w;w=max}}else{if(h>max){w*=max/h;h=max}}
-                c.width=w; c.height=h; ctx.drawImage(img,0,0,w,h);
-                
-                const d = ctx.getImageData(0,0,w,h);
-                for(let i=0; i<d.data.length; i+=4){
-                   const avg = (d.data[i]+d.data[i+1]+d.data[i+2])/3;
-                   const v = avg > 110 ? 255 : d.data[i]*0.8;
-                   d.data[i]=v; d.data[i+1]=v; d.data[i+2]=v;
-                }
-                ctx.putImageData(d,0,0);
-                
-                const b64 = c.toDataURL('image/jpeg', 0.6).split(',')[1];
-                
-                // SALVAM IN CACHE 
-                let fileKey = ""; let boxId = "";
-                if (ACTIVE_SCAN_TARGET === 'aviz1') { fileKey='fileAviz1'; boxId='box_fileAviz1'; }
-                else if (ACTIVE_SCAN_TARGET === 'aviz2') { fileKey='fileAviz2'; boxId='box_fileAviz2'; }
-                else if (ACTIVE_SCAN_TARGET === 'delegatie') { fileKey='fileDelegatie'; boxId='box_fileDelegatie'; }
-                
-                if(fileKey) {
-                    FILE_CACHE[fileKey] = b64;
-                    document.getElementById(boxId).classList.add('has-file');
-                    // Flag special pt Sync Offline AI
-                    if (ACTIVE_SCAN_TARGET === 'aviz1') FILE_CACHE['aviz1_base64_temp'] = b64;
-                }
+    async function processQueue() {
+        const queue = getQueue();
+        if (queue.length === 0) return;
 
-                if(navigator.onLine) {
-                    showLoader("Analiză AI...");
-                    fetch(SCRIPT_URL, {
-                        method: 'POST',
-                        body: JSON.stringify({ actiune: 'analizaTransport', image: b64 })
-                    })
-                    .then(r => r.json()).then(res => fillScannedData(res))
-                    .catch(() => { hideLoader(); alert("Eroare AI. Completează manual."); });
+        const syncMsg = document.getElementById('syncMessage');
+        syncMsg.classList.remove('hidden');
+        syncMsg.innerHTML = `<i class="fas fa-sync fa-spin"></i> Se sincronizează ${queue.length} curse...`;
+
+        const itemToSync = queue[0];
+
+        try {
+            console.log("Syncing item...", itemToSync);
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(itemToSync)
+            });
+            const res = await response.json();
+
+            if (res.success) {
+                queue.shift(); 
+                localStorage.setItem(OFFLINE_KEY, JSON.stringify(queue));
+                if (queue.length > 0) {
+                    processQueue(); 
                 } else {
-                    hideLoader();
-                    alert("📸 Poză salvată local.\nDatele vor fi extrase automat când revine internetul.");
+                    syncMsg.classList.add('hidden');
+                    updateNetworkStatus();
+                    alert("✅ Toate datele offline au fost sincronizate!");
+                    loadHistory();
                 }
-            };
-            img.src = evt.target.result;
-        };
-        reader.readAsDataURL(file);
-        input.value = '';
-    }
-
-    function fillScannedData(res) {
-        hideLoader();
-        if(!res.success) { alert("Nu s-au putut extrage datele."); return; }
-        const d = res.data;
-        
-        // Fortam afisarea online a campurilor
-        document.getElementById('fullDetailsContainer').classList.remove('hidden');
-        document.getElementById('fieldsAviz1').classList.remove('hidden');
-        document.getElementById('fieldsAviz2').classList.remove('hidden');
-        document.getElementById('fieldsDelegatie').classList.remove('hidden');
-        document.getElementById('offlineMessage').classList.add('hidden');
-
-        if(d.auto) document.getElementById('numarAuto').value = d.auto.toUpperCase();
-        if(d.data) { document.getElementById('dataTransport').value = d.data; document.getElementById('dataFacturare').value = d.data; }
-        
-        if (ACTIVE_SCAN_TARGET === 'aviz1') {
-            if(d.numar) document.getElementById('numarAviz1').value = d.numar;
-            if(d.tone) document.getElementById('toneAviz1').value = d.tone;
-            if(d.incarcare) document.getElementById('locIncarcare').value = d.incarcare;
-            if(d.descarcare) document.getElementById('locDescarcare').value = d.descarcare;
-            if(d.material) document.getElementById('material').value = d.material;
-        } 
-        else if (ACTIVE_SCAN_TARGET === 'aviz2') {
-            if(d.numar) document.getElementById('numarAviz2').value = d.numar;
-            if(d.tone) document.getElementById('toneAviz2').value = d.tone;
+            } else {
+                console.error("Eroare server la sync:", res.message);
+                syncMsg.innerText = "Eroare la sincronizare. Se reîncearcă...";
+                setTimeout(() => syncMsg.classList.add('hidden'), 3000);
+            }
+        } catch (err) {
+            console.error("Eroare retea la sync:", err);
+            syncMsg.classList.add('hidden');
         }
-        else if (ACTIVE_SCAN_TARGET === 'delegatie') {
-            if(d.numar) document.getElementById('numarDelegatie').value = d.numar;
-        }
-        alert("✅ Date extrase cu succes!");
     }
 
     // ==========================================
-    // 5. SUBMIT & SYNC
+    // 4. FUNCTIONALITATE APP
     // ==========================================
+
     function handleSubmit(e) {
        e.preventDefault();
-       
-       if(!document.getElementById('santier').value || !document.getElementById('numarAuto').value) {
-           alert("Completează Șantierul și Auto!"); return;
-       }
-       if(navigator.onLine && !document.getElementById('numarAviz1').value && !FILE_CACHE['fileAviz1']) {
-           alert("Online trebuie să completezi datele sau să scanezi un aviz!"); return;
-       }
-       if(!navigator.onLine && !FILE_CACHE['fileAviz1'] && !FILE_CACHE['fileDelegatie']) {
-           alert("Offline trebuie să faci măcar o poză (Aviz sau Delegație)!"); return;
-       }
-
        const formData = {
           editId: document.getElementById('editId').value,
-          dataTransport: document.getElementById('dataTransport').value || new Date().toISOString().split('T')[0],
-          dataFacturare: document.getElementById('dataFacturare').value || new Date().toISOString().split('T')[0],
+          dataTransport: document.getElementById('dataTransport').value,
+          dataFacturare: document.getElementById('dataFacturare').value,
           sofer: document.getElementById('sofer').value,
           numarAuto: document.getElementById('numarAuto').value,
           santier: document.getElementById('santier').value,
           locIncarcare: document.getElementById('locIncarcare').value,
           locDescarcare: document.getElementById('locDescarcare').value,
           material: document.getElementById('material').value,
-          numarAviz1: document.getElementById('numarAviz1').value || 0,
-          toneAviz1: document.getElementById('toneAviz1').value || 0,
-          
+          numarAviz1: document.getElementById('numarAviz1').value,
+          toneAviz1: document.getElementById('toneAviz1').value,
           pozaAviz1: FILE_CACHE['fileAviz1'] || '',
           pozaTichet1: FILE_CACHE['fileTichet1'] || '',
-          pozaAviz1_base64_temp: FILE_CACHE['aviz1_base64_temp'] || '',
-          
           hasAviz2: document.getElementById('checkAviz2').checked,
-          numarAviz2: document.getElementById('numarAviz2').value || 0,
-          toneAviz2: document.getElementById('toneAviz2').value || 0,
+          numarAviz2: document.getElementById('numarAviz2').value,
+          toneAviz2: document.getElementById('toneAviz2').value,
           pozaAviz2: FILE_CACHE['fileAviz2'] || '',
-          
           hasCMR: document.getElementById('checkCMR').checked,
           pozaCMR: FILE_CACHE['fileCMR'] || '',
           hasDelegatie: document.getElementById('checkDel').checked,
           numarDelegatie: document.getElementById('numarDelegatie').value,
           pozaDelegatie: FILE_CACHE['fileDelegatie'] || '',
-          
           statusCursa: document.querySelector('input[name="statusCursa"]:checked').value
        };
 
-       const payload = { actiune: 'saveTransport', formData: formData, email: USER_INFO.email };
+       const payload = {
+           actiune: 'saveTransport',
+           formData: formData,
+           email: USER_INFO.email
+       };
 
        if (navigator.onLine) {
-           showLoader("Se salvează...");
-           fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
-           .then(r => r.json()).then(res => {
-              hideLoader();
-              if(res.success) { alert("✅ Salvat!"); switchView('list'); }
-              else alert("Eroare: " + res.message);
+           showLoader("Se salvează online...");
+           fetch(SCRIPT_URL, {
+               method: 'POST',
+               body: JSON.stringify(payload)
            })
-           .catch(() => { saveToQueue(payload); alert("Conexiune slaba. Salvat Offline."); switchView('list'); });
+           .then(r => r.json())
+           .then(res => {
+              hideLoader();
+              if(res.success) {
+                 alert("✅ Salvat Online!");
+                 switchView('list');
+              } else { alert("Eroare Server: " + res.message); }
+           })
+           .catch(e => {
+               hideLoader();
+               if(confirm("Eroare conexiune. Vrei să salvezi OFFLINE?")) {
+                   saveToQueue(payload);
+                   alert("💾 Salvat OFFLINE. Se va trimite automat când revine netul.");
+                   switchView('list');
+               }
+           });
        } else {
            saveToQueue(payload);
-           alert("💾 Salvat Offline. Se va trimite automat.");
+           alert("💾 Salvat OFFLINE. Datele sunt în siguranță în telefon.");
            switchView('list');
        }
     }
 
-    // --- COADA & SYNC ---
-    function getQueue() { return JSON.parse(localStorage.getItem(OFFLINE_KEY) || "[]"); }
-    function saveToQueue(payload) {
-        const queue = getQueue();
-        payload._tempId = Date.now();
-        queue.push(payload);
-        localStorage.setItem(OFFLINE_KEY, JSON.stringify(queue));
-        updateNetworkStatus();
-        resetForm();
+    // --- MANIPULARE POZE (COMPRESIE) ---
+    function triggerPhoto(id) { document.getElementById(id).click(); }
+    
+    function previewFile(input) {
+       const f = input.files[0];
+       if(!f) return;
+       const reader = new FileReader();
+       reader.onload = function(e) {
+           const img = new Image();
+           img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const maxDim = 1200; 
+                let w = img.width; let h = img.height;
+                if (w > h) { if (w > maxDim) { h *= maxDim / w; w = maxDim; } } 
+                else { if (h > maxDim) { w *= maxDim / h; h = maxDim; } }
+                canvas.width = w; canvas.height = h;
+                ctx.drawImage(img, 0, 0, w, h);
+                FILE_CACHE[input.id] = canvas.toDataURL('image/jpeg', 0.7).split(',')[1];
+                input.parentElement.classList.add('has-file');
+           }
+           img.src = e.target.result;
+       };
+       reader.readAsDataURL(f);
     }
 
-    async function processQueue() {
-        const queue = getQueue();
-        if (queue.length === 0) return;
-        
-        const syncMsg = document.getElementById('syncMessage');
-        syncMsg.classList.remove('hidden');
-        syncMsg.innerHTML = `<i class="fas fa-sync fa-spin"></i> Se procesează ${queue.length} curse offline...`;
-        
-        const item = queue[0];
-        try {
-            const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(item) }).then(r=>r.json());
-            if(res.success) {
-                queue.shift();
-                localStorage.setItem(OFFLINE_KEY, JSON.stringify(queue));
-                sendSyncNotification(item.formData.santier);
-                
-                if(queue.length > 0) processQueue();
-                else {
-                    syncMsg.classList.add('hidden');
-                    updateNetworkStatus();
-                    alert("✅ Toate datele au fost sincronizate!");
-                    loadHistory();
-                }
-            } else {
-                syncMsg.innerText = "Eroare sync...";
-                setTimeout(()=>syncMsg.classList.add('hidden'),3000);
-            }
-        } catch(e) { syncMsg.classList.add('hidden'); }
+    // --- RESTUL FUNCTIILOR UI ---
+
+    function initApp() {
+       const today = new Date().toISOString().split('T')[0];
+       document.getElementById('dataTransport').value = today;
+       document.getElementById('dataFacturare').value = today;
+       document.getElementById('sofer').value = USER_INFO.nume;
+       setupAutocomplete('numarAuto', 'list-numarAuto', GLOBAL_DATA.auto || []);
+       setupAutocomplete('santier', 'list-santier', GLOBAL_DATA.santiere || []);
+       setupAutocomplete('locIncarcare', 'list-locIncarcare', GLOBAL_DATA.locatii || []);
+       setupAutocomplete('locDescarcare', 'list-locDescarcare', GLOBAL_DATA.locatii || []);
+       setupAutocomplete('material', 'list-material', GLOBAL_DATA.materiale || []);
+       if(navigator.onLine) loadHistory();
+       else {
+           hideLoader();
+           document.getElementById('trips-container').innerHTML = '<div class="text-center mt-5 text-muted">Esti offline.<br>Istoricul nu poate fi încărcat.<br>Poți adăuga curse noi.</div>';
+       }
     }
 
-    function sendSyncNotification(santier) {
-        if (!("Notification" in window)) return;
-        if (Notification.permission === "granted") {
-            new Notification("Transport Sincronizat", {
-                body: `Cursa pentru ${santier} a fost procesată și salvată.`,
-                icon: "https://cdn-icons-png.flaticon.com/512/190/190411.png"
-            });
-        }
-    }
-    
-    function requestNotificationPermission() {
-        if ("Notification" in window && Notification.permission !== "granted") Notification.requestPermission();
+    function loadHistory() {
+       if(!navigator.onLine) return; 
+       showLoader("Se actualizează...");
+       fetch(`${SCRIPT_URL}?actiune=getUserTrips&sofer=${encodeURIComponent(USER_INFO.nume)}`)
+           .then(r => r.json())
+           .then(trips => {
+              hideLoader();
+              USER_TRIPS = trips;
+              renderTrips(trips);
+           })
+           .catch(e => { hideLoader(); console.error(e); });
     }
 
-    // --- UTILS ---
-    function openAddScreen() {
-        resetForm(); document.getElementById('editId').value = "";
-        switchView('add');
-    }
-    
-    function switchView(view) {
-        document.getElementById('view-list').classList.toggle('hidden', view !== 'list');
-        document.getElementById('view-add').classList.toggle('hidden', view !== 'add');
-        document.getElementById('tab-list').classList.toggle('active', view === 'list');
-        document.getElementById('tab-add').classList.toggle('active', view === 'add');
-        if(view==='list' && navigator.onLine) loadHistory();
-    }
-    
-    function resetForm() {
-        document.getElementById('transportForm').reset();
-        document.getElementById('editId').value = "";
-        document.getElementById('sofer').value = USER_INFO.nume;
-        document.getElementById('dataTransport').value = new Date().toISOString().split('T')[0];
-        FILE_CACHE = {};
-        document.querySelectorAll('.photo-box').forEach(el => el.classList.remove('has-file'));
-        updateFormVisibility();
-    }
-    
-    // --- LIST RENDER (DOM Based) ---
+    // --- FUNCTIA REPARATA PENTRU LISTA (DOM-BASED) ---
     function renderTrips(trips) {
-       const container = document.getElementById('trips-container'); container.innerHTML = '';
-       if(!trips || !trips.length) { container.innerHTML = '<div class="text-center mt-5 text-muted">Nu există date.</div>'; return; }
-       
-       const grouped = {};
+       const container = document.getElementById('trips-container');
+       container.innerHTML = '';
+       if(!trips || trips.length === 0) { 
+           container.innerHTML = '<div class="text-center mt-5 text-muted">Nu există date.</div>'; 
+           return; 
+       }
+
+       const groupedByMonth = {};
        trips.forEach(t => {
-          let d = t.DATA_TRANSPORT; 
-          try { if(typeof d==='object') d=new Date(d.value).toISOString(); else if(d.includes('T')) d=d.split('T')[0]; } catch(e){d="2024-01-01";}
-          if(!d) d="2024-01-01";
-          const y = d.split('-')[0]; const m = parseInt(d.split('-')[1]);
-          const key = (["","IAN","FEB","MAR","APR","MAI","IUN","IUL","AUG","SEP","OCT","NOI","DEC"][m]||"UNK") + " " + y;
-          if(!grouped[key]) grouped[key] = []; grouped[key].push(t);
+          let dStr = t.DATA_TRANSPORT;
+          try {
+             if(typeof dStr === 'object' && dStr.value) dStr = new Date(dStr.value).toISOString().split('T')[0];
+             else if(typeof dStr === 'string' && dStr.includes('T')) dStr = dStr.split('T')[0];
+          } catch(e) { dStr = "2024-01-01"; }
+          if (!dStr) dStr = "2024-01-01";
+
+          const y = dStr.split('-')[0];
+          const m = parseInt(dStr.split('-')[1]);
+          const mNames = ["", "IANUARIE", "FEBRUARIE", "MARTIE", "APRILIE", "MAI", "IUNIE", "IULIE", "AUGUST", "SEPTEMBRIE", "OCTOMBRIE", "NOIEMBRIE", "DECEMBRIE"];
+          const key = (mNames[m] || "LUNA NECUNOSCUTA") + " " + y;
+          
+          if(!groupedByMonth[key]) groupedByMonth[key] = [];
+          groupedByMonth[key].push(t);
        });
 
-       let idx=0;
-       for(const [mKey, mTrips] of Object.entries(grouped)) {
+       let idx = 0;
+       for(const [monthKey, monthTrips] of Object.entries(groupedByMonth)) {
           idx++;
-          const mDiv = document.createElement('div'); mDiv.className='accordion-item';
-          mDiv.innerHTML = `<h2 class="accordion-header"><button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#acc${idx}"><span><i class="far fa-calendar me-2"></i> ${mKey}</span><i class="fas fa-chevron-down month-chevron"></i></button></h2><div id="acc${idx}" class="accordion-collapse collapse" data-bs-parent="#trips-container"><div class="accordion-body" id="body${idx}"></div></div>`;
-          container.appendChild(mDiv);
-          const body = mDiv.querySelector(`#body${idx}`);
-          
-          const bySite = {};
-          mTrips.forEach(t => { const s = t.SANTIER||'FARA SANTIER'; if(!bySite[s]) bySite[s]=[]; bySite[s].push(t); });
-          
-          let sIdx=0;
-          for(const [site, sTrips] of Object.entries(bySite)) {
-              sIdx++;
-              const sDiv = document.createElement('div'); sDiv.className='accordion mt-1';
-              sDiv.innerHTML = `<button class="sub-accordion-btn collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sub${idx}_${sIdx}"><div class="site-name-container"><span class="text-dark fw-bold">${site}</span></div><div class="site-badge-container"><span class="site-badge">${sTrips.length}</span></div><div class="site-arrow-container"><i class="fas fa-chevron-down site-chev"></i></div></button><div id="sub${idx}_${sIdx}" class="accordion-collapse collapse"><div class="pt-2" id="list${idx}_${sIdx}"></div></div>`;
-              body.appendChild(sDiv);
-              const list = sDiv.querySelector(`#list${idx}_${sIdx}`);
-              
-              sTrips.forEach(t => {
-                  let dispD = t.DATA_TRANSPORT; try { if(typeof dispD==='string'&&dispD.includes('T')) dispD=new Date(dispD).toLocaleDateString('ro'); } catch(e){}
-                  const card = document.createElement('div'); card.className='trip-card';
-                  card.onclick = () => openDetail(t.ID);
-                  card.innerHTML = `<div class="trip-date">${dispD}</div><div class="trip-main">${t.SOFER}</div><div class="trip-sub">${t.MATERIAL} • ${t.NR_INMATRICULARE}</div><div class="trip-amount">${t.AVIZ_1_TONE} t</div>`;
-                  list.appendChild(card);
+          const accordionId = `accMonth${idx}`;
+          const monthItem = document.createElement('div');
+          monthItem.className = 'accordion-item';
+          monthItem.innerHTML = `
+             <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${accordionId}">
+                   <span><i class="far fa-calendar-alt me-2"></i> ${monthKey}</span>
+                   <i class="fas fa-chevron-down month-chevron"></i>
+                </button>
+             </h2>
+             <div id="${accordionId}" class="accordion-collapse collapse" data-bs-parent="#trips-container">
+                <div class="accordion-body" id="body${accordionId}"></div>
+             </div>
+          `;
+          container.appendChild(monthItem);
+          const monthBody = monthItem.querySelector(`#body${accordionId}`);
+
+          const groupedBySite = {};
+          monthTrips.forEach(t => {
+              const site = t.SANTIER || 'FĂRĂ ȘANTIER';
+              if(!groupedBySite[site]) groupedBySite[site] = [];
+              groupedBySite[site].push(t);
+          });
+
+          let subIdx = 0;
+          for(const [siteKey, siteTrips] of Object.entries(groupedBySite)) {
+              subIdx++;
+              const subId = `sub_${idx}_${subIdx}`;
+              const siteAcc = document.createElement('div');
+              siteAcc.className = 'accordion mt-1';
+              siteAcc.innerHTML = `
+                  <button class="sub-accordion-btn collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${subId}" aria-expanded="false">
+                      <div class="site-name-container"><span class="text-dark fw-bold">${siteKey}</span></div>
+                      <div class="site-badge-container"><span class="site-badge">${siteTrips.length}</span></div>
+                      <div class="site-arrow-container"><i class="fas fa-chevron-down site-chev"></i></div>
+                  </button>
+                  <div id="${subId}" class="accordion-collapse collapse">
+                      <div class="pt-2" id="list${subId}"></div>
+                  </div>
+              `;
+              monthBody.appendChild(siteAcc);
+              const listDiv = siteAcc.querySelector(`#list${subId}`);
+
+              siteTrips.forEach(t => {
+                 let displayDate = t.DATA_TRANSPORT;
+                 try {
+                     if(typeof displayDate === 'string' && displayDate.includes('T')) displayDate = new Date(displayDate).toLocaleDateString('ro-RO');
+                     else if (typeof displayDate === 'object') displayDate = new Date(displayDate.value).toLocaleDateString('ro-RO');
+                 } catch(e) { displayDate = t.DATA_TRANSPORT; }
+                 
+                 const rowEl = document.createElement('div');
+                 rowEl.className = 'trip-card';
+                 rowEl.onclick = function() { openDetail(t.ID); };
+                 rowEl.innerHTML = `
+                       <div class="trip-date"><i class="far fa-calendar me-1"></i> ${displayDate}</div>
+                       <div class="trip-main">${t.SOFER || 'Nespecificat'}</div>
+                       <div class="trip-sub"><i class="fas fa-cubes me-1"></i> ${t.MATERIAL} &bull; ${t.NR_INMATRICULARE}</div>
+                       <div class="trip-amount">${t.AVIZ_1_TONE || 0} t</div>
+                 `;
+                 listDiv.appendChild(rowEl);
               });
           }
        }
     }
-    
-    // --- HELPERS ---
-    function openDetail(id) { 
-        CURRENT_TRIP_ID=id; 
-        const t=USER_TRIPS.find(x=>x.ID===id); 
-        if(!t)return;
-        // Fix data afisare
-        let dispD = t.DATA_TRANSPORT; try { if(typeof dispD==='string'&&dispD.includes('T')) dispD=new Date(dispD).toLocaleDateString('ro'); else if (typeof dispD === 'object') dispD=new Date(dispD.value).toLocaleDateString('ro'); } catch(e){}
-        
-        document.getElementById('detailsBody').innerHTML = `<div class="detail-section"><div class="detail-section-title">General</div><div class="detail-row"><span class="detail-label">DATĂ</span><span class="detail-val">${dispD}</span></div><div class="detail-row"><span class="detail-label">ȘOFER</span><span class="detail-val">${t.SOFER}</span></div><div class="detail-row"><span class="detail-label">AUTO</span><span class="detail-val">${t.NR_INMATRICULARE}</span></div></div><div class="detail-section"><div class="detail-section-title">Marfă</div><div class="detail-row"><span class="detail-label">ȘANTIER</span><span class="detail-val">${t.SANTIER}</span></div><div class="detail-row"><span class="detail-label">MATERIAL</span><span class="detail-val">${t.MATERIAL}</span></div><div class="detail-row"><span class="detail-label">TONE</span><span class="detail-val fw-bold text-success">${t.AVIZ_1_TONE}</span></div></div>`;
-        new bootstrap.Modal(document.getElementById('detailsModal')).show(); 
+
+    function openDetail(id) {
+       CURRENT_TRIP_ID = id;
+       const t = USER_TRIPS.find(x => x.ID === id);
+       if(!t) return;
+       const body = document.getElementById('detailsBody');
+       const detailsModal = new bootstrap.Modal(document.getElementById('detailsModal'));
+       const dVal = (v) => v || '-';
+       let displayDate = t.DATA_TRANSPORT;
+       try { if(typeof displayDate === 'object') displayDate = new Date(displayDate.value).toLocaleDateString('ro-RO'); 
+             else if(displayDate.includes('T')) displayDate = new Date(displayDate).toLocaleDateString('ro-RO');
+       } catch(e) {}
+
+       body.innerHTML = `
+         <div class="detail-section"><div class="detail-section-title">General</div><div class="detail-row"><span class="detail-label">DATĂ</span><span class="detail-val">${displayDate}</span></div><div class="detail-row"><span class="detail-label">ȘOFER</span><span class="detail-val">${dVal(t.SOFER)}</span></div><div class="detail-row"><span class="detail-label">AUTO</span><span class="detail-val">${dVal(t.NR_INMATRICULARE)}</span></div><div class="detail-row"><span class="detail-label">STATUS</span><span class="detail-val fw-bold ${t.STATUS_CURSA=='CONFIRMATA'?'text-success':'text-danger'}">${dVal(t.STATUS_CURSA)}</span></div></div>
+         <div class="detail-section"><div class="detail-section-title">Locație & Marfă</div><div class="detail-row"><span class="detail-label">ȘANTIER</span><span class="detail-val">${dVal(t.SANTIER)}</span></div><div class="detail-row"><span class="detail-label">MATERIAL</span><span class="detail-val">${dVal(t.MATERIAL)}</span></div><div class="detail-row"><span class="detail-label">ÎNCĂRCARE</span><span class="detail-val">${dVal(t.LOC_INCARCARE)}</span></div><div class="detail-row"><span class="detail-label">DESCĂRCARE</span><span class="detail-val">${dVal(t.LOC_DESCARCARE)}</span></div></div>
+         <div class="detail-section"><div class="detail-section-title">Documente</div><div class="detail-row"><span class="detail-label">AVIZ 1</span><span class="detail-val">${t.AVIZ_1_NUMAR} (${t.AVIZ_1_TONE} t)</span></div>${t.AVIZ_2 === 'DA' ? `<div class="detail-row"><span class="detail-label">AVIZ 2</span><span class="detail-val">${t.AVIZ_2_NUMAR} (${t.AVIZ_2_TONE} t)</span></div>` : ''}<div class="detail-row"><span class="detail-label">CMR</span><span class="detail-val">${t.CMR}</span></div><div class="detail-row"><span class="detail-label">DELEGAȚIE</span><span class="detail-val">${t.DELEGATIE}</span></div></div>
+       `;
+       detailsModal.show();
     }
-    
-    function editCurrentTrip() { if(!navigator.onLine){alert("Doar Online");return;} alert("Editare indisponibila momentan in acest demo simplificat."); }
-    function deleteCurrentTrip() { if(!navigator.onLine)return; if(confirm("Stergi?")) { showLoader("..."); fetch(SCRIPT_URL, {method:'POST', body:JSON.stringify({actiune:'deleteTransport', id:CURRENT_TRIP_ID, email:USER_INFO.email})}).then(r=>r.json()).then(()=>{hideLoader(); bootstrap.Modal.getInstance(document.getElementById('detailsModal')).hide(); loadHistory();}); } }
-    function showPhotos() { const t=USER_TRIPS.find(x=>x.ID===CURRENT_TRIP_ID); if(t.AVIZ_1_POZA) window.open(t.AVIZ_1_POZA); else alert("Fara poze"); }
-    
-    function setupAutocomplete(id, listId, data) { const inp=document.getElementById(id), list=document.getElementById(listId); inp.oninput=()=>{ const v=inp.value.toLowerCase(); list.innerHTML=''; if(!v){list.style.display='none';return;} const m=data.filter(x=>x&&x.toLowerCase().includes(v)); if(m.length){list.style.display='block'; m.forEach(x=>{const d=document.createElement('div');d.className='autocomplete-item';d.innerText=x;d.onclick=()=>{inp.value=x;list.style.display='none';};list.appendChild(d);});}else list.style.display='none'; }; document.onclick=e=>{if(e.target!==inp)list.style.display='none';}; }
-    function toggleDiv(id,s) { const e=document.getElementById(id); if(s)e.classList.remove('hidden'); else e.classList.add('hidden'); }
-    function showLoader(t) { document.getElementById('loaderText').innerText=t; document.getElementById('loader').style.display='flex'; }
-    function hideLoader() { document.getElementById('loader').style.display='none'; }
-    function triggerPhoto(id) { document.getElementById(id).click(); }
-    function previewFile(inp) { const f=inp.files[0]; if(f){ const r=new FileReader(); r.onload=e=>{ FILE_CACHE[inp.id]=e.target.result.split(',')[1]; inp.parentElement.classList.add('has-file'); }; r.readAsDataURL(f); } }
+
+    function switchView(view) {
+       if(view === 'list') {
+          document.getElementById('view-list').classList.remove('hidden');
+          document.getElementById('view-add').classList.add('hidden');
+          document.getElementById('tab-list').classList.add('active');
+          document.getElementById('tab-add').classList.remove('active');
+          document.getElementById('tab-add').innerText = "Adaugă Cursă";
+          if(navigator.onLine) loadHistory();
+       } else {
+          document.getElementById('view-list').classList.add('hidden');
+          document.getElementById('view-add').classList.remove('hidden');
+          document.getElementById('tab-list').classList.remove('active');
+          document.getElementById('tab-add').classList.add('active');
+          if (!document.getElementById('editId').value) resetForm();
+       }
+    }
+
+    function resetForm() {
+       document.getElementById('transportForm').reset();
+       document.getElementById('editId').value = ""; 
+       document.getElementById('sofer').value = USER_INFO.nume;
+       const today = new Date().toISOString().split('T')[0];
+       document.getElementById('dataTransport').value = today;
+       document.getElementById('dataFacturare').value = today;
+       FILE_CACHE = {};
+       document.querySelectorAll('.photo-box').forEach(el => el.classList.remove('has-file'));
+       document.getElementById('secAviz2').classList.add('hidden');
+       document.getElementById('secCMR').classList.add('hidden');
+       document.getElementById('secDel').classList.add('hidden');
+    }
+
+    function editCurrentTrip() {
+       if(!navigator.onLine) { alert("Editarea funcționează doar online!"); return; }
+       const t = USER_TRIPS.find(x => x.ID === CURRENT_TRIP_ID);
+       if(!t) return;
+       bootstrap.Modal.getInstance(document.getElementById('detailsModal')).hide();
+       switchView('add');
+       document.getElementById('tab-add').innerText = "Editare Cursă";
+       document.getElementById('editId').value = t.ID;
+       
+       const setVal = (id, val) => { if(document.getElementById(id)) document.getElementById(id).value = val || ''; };
+       const setCheck = (id, val) => { const chk = document.getElementById(id); chk.checked = (val === 'DA'); chk.onchange(); };
+       
+       let dt = t.DATA_TRANSPORT; if(typeof dt === 'object') dt = new Date(dt.value).toISOString().split('T')[0]; else if(dt.includes('T')) dt = dt.split('T')[0];
+       let df = t.DATA_FACTURARE; if(typeof df === 'object') df = new Date(df.value).toISOString().split('T')[0]; else if(df.includes('T')) df = df.split('T')[0];
+
+       setVal('dataTransport', dt); setVal('dataFacturare', df);
+       setVal('sofer', t.SOFER); setVal('numarAuto', t.NR_INMATRICULARE);
+       setVal('santier', t.SANTIER); setVal('locIncarcare', t.LOC_INCARCARE);
+       setVal('locDescarcare', t.LOC_DESCARCARE); setVal('material', t.MATERIAL);
+       setVal('numarAviz1', t.AVIZ_1_NUMAR); setVal('toneAviz1', t.AVIZ_1_TONE);
+       if(t.AVIZ_1_POZA) FILE_CACHE['fileAviz1'] = t.AVIZ_1_POZA;
+       if(t.TICHET_1_CANTAR_POZA) FILE_CACHE['fileTichet1'] = t.TICHET_1_CANTAR_POZA;
+       setCheck('checkAviz2', t.AVIZ_2); setVal('numarAviz2', t.AVIZ_2_NUMAR); setVal('toneAviz2', t.AVIZ_2_TONE);
+       if(t.AVIZ_2_POZA) FILE_CACHE['fileAviz2'] = t.AVIZ_2_POZA;
+       setCheck('checkCMR', t.CMR); if(t['CMR POZA']) FILE_CACHE['fileCMR'] = t['CMR POZA'];
+       setCheck('checkDel', t.DELEGATIE); setVal('numarDelegatie', t.DELEGATIE_NUMAR);
+       if(t.DELEGATIE_POZA) FILE_CACHE['fileDelegatie'] = t.DELEGATIE_POZA;
+       if(t.STATUS_CURSA === 'NECONFIRMATA') document.getElementById('statusNeconf').checked = true;
+       else document.getElementById('statusConf').checked = true;
+       for(let k in FILE_CACHE) { const input = document.getElementById(k); if(input && FILE_CACHE[k]) input.parentElement.classList.add('has-file'); }
+    }
+
+    function deleteCurrentTrip() {
+       if(!navigator.onLine) { alert("Ștergerea funcționează doar online!"); return; }
+       if(!confirm("Ești sigur?")) return;
+       showLoader("Se șterge...");
+       fetch(SCRIPT_URL, {
+           method: 'POST',
+           body: JSON.stringify({ actiune: 'deleteTransport', id: CURRENT_TRIP_ID, email: USER_INFO.email })
+       }).then(r => r.json()).then(res => {
+          hideLoader(); bootstrap.Modal.getInstance(document.getElementById('detailsModal')).hide(); loadHistory();
+       }).catch(e => { hideLoader(); alert("Eroare: " + e); });
+    }
+
+    function showPhotos() {
+        const t = USER_TRIPS.find(x => x.ID === CURRENT_TRIP_ID);
+        let urls = [];
+        if(t.AVIZ_1_POZA) urls.push(t.AVIZ_1_POZA);
+        if(t.TICHET_1_CANTAR_POZA) urls.push(t.TICHET_1_CANTAR_POZA);
+        if(t.AVIZ_2_POZA) urls.push(t.AVIZ_2_POZA);
+        if(t['CMR POZA']) urls.push(t['CMR POZA']);
+        if(t.DELEGATIE_POZA) urls.push(t.DELEGATIE_POZA);
+        if(urls.length === 0) alert("Nu există poze.");
+        else urls.forEach(u => window.open(u, '_blank'));
+    }
+
+    function setupAutocomplete(id, listId, data) {
+       const inp = document.getElementById(id);
+       const list = document.getElementById(listId);
+       const safeData = data || [];
+       inp.oninput = function() {
+          const val = this.value.toLowerCase();
+          list.innerHTML = '';
+          if(!val) { list.style.display='none'; return; }
+          const matches = safeData.filter(x => x && x.toLowerCase().includes(val));
+          if(matches.length) {
+             list.style.display = 'block';
+             matches.forEach(m => {
+                const d = document.createElement('div');
+                d.className = 'autocomplete-item'; d.innerText = m;
+                d.onclick = () => { inp.value = m; list.style.display='none'; };
+                list.appendChild(d);
+             });
+          } else list.style.display='none';
+       };
+       document.addEventListener('click', e => { if(e.target!==inp) list.style.display='none'; });
+    }
+
+    function toggleDiv(id, s) { const el = document.getElementById(id); if(s) el.classList.remove('hidden'); else el.classList.add('hidden'); }
+    function showLoader(t) { document.getElementById('loaderText').innerText = t; document.getElementById('loader').style.display = 'flex'; }
+    function hideLoader() { document.getElementById('loader').style.display = 'none'; }
   </script>
 </body>
 </html>
