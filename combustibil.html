@@ -178,27 +178,60 @@
                     <img id="hiddenPreviewImg" src="" class="hidden">
                     
                     <form id="bonForm">
-                        <input type="hidden" id="poza_url_drive"><input type="hidden" id="bonIdEdit"><input type="hidden" id="formMode">
-                        <div class="form-section"><i class="fa-regular fa-calendar"></i><h4>Date Generale</h4></div>
-                        <div class="mb-3"><label class="text-muted small fw-bold ms-1">DATA</label><input type="date" class="form-control fw-bold" id="date"></div>
-                        <div class="mb-3"><label class="text-muted small fw-bold ms-1">ȘOFER</label><div class="custom-dropdown-wrapper"><input type="text" class="form-control fw-bold" id="soferInput" placeholder="Caută..." autocomplete="off"><i class="fa-solid fa-chevron-down input-icon-right"></i><div id="soferList" class="custom-dropdown-list"></div></div></div>
-                        <div class="mb-3"><label class="text-muted small fw-bold ms-1">AUTO</label><div class="custom-dropdown-wrapper"><input type="text" class="form-control fw-bold" id="autoInput" placeholder="Caută..." autocomplete="off"><i class="fa-solid fa-chevron-down input-icon-right"></i><div id="autoList" class="custom-dropdown-list"></div></div></div>
+    <input type="hidden" id="poza_url_drive"><input type="hidden" id="bonIdEdit"><input type="hidden" id="formMode">
+    
+    <div class="form-section mb-2"><i class="fa-solid fa-user-tag"></i><h4>Identificare</h4></div>
+    
+    <div class="mb-3">
+        <label class="text-muted small fw-bold ms-1">ȘOFER</label>
+        <div class="custom-dropdown-wrapper">
+            <input type="text" class="form-control fw-bold" id="soferInput" placeholder="Caută..." autocomplete="off">
+            <i class="fa-solid fa-chevron-down input-icon-right"></i>
+            <div id="soferList" class="custom-dropdown-list"></div>
+        </div>
+    </div>
+    <div class="mb-4">
+        <label class="text-muted small fw-bold ms-1">AUTO</label>
+        <div class="custom-dropdown-wrapper">
+            <input type="text" class="form-control fw-bold" id="autoInput" placeholder="Caută..." autocomplete="off">
+            <i class="fa-solid fa-chevron-down input-icon-right"></i>
+            <div id="autoList" class="custom-dropdown-list"></div>
+        </div>
+    </div>
 
-                        <div class="form-section"><i class="fa-regular fa-credit-card"></i><h4>Date Card</h4></div>
-                        <div class="mb-3"><label class="text-muted small fw-bold">POSESOR</label><input type="text" class="form-control" id="posesorCard" readonly style="background:#e9ecef;"></div>
-                        <div class="mb-3"><label class="text-muted small fw-bold">FURNIZOR</label><input type="text" class="form-control fw-bold text-primary" id="furnizorCardDisplay"></div>
-                        <div class="mb-3"><label class="text-muted small fw-bold">DENUMIRE (NR)</label><input type="text" class="form-control" id="denumireCard" readonly style="background:#e9ecef;"></div>
-                        
-                        <div class="form-section"><i class="fa-solid fa-receipt"></i><h4>Detalii Bon</h4></div>
-                        <div class="mb-3"><label class="text-muted small fw-bold">NR. BON</label><input type="number" class="form-control" id="receipt_number"></div>
-                        <div class="mb-3"><label class="text-muted small fw-bold">STAȚIE</label><input type="text" class="form-control" id="station"></div>
-                        <div class="mb-3"><label class="text-muted small fw-bold">FURNIZOR</label><input type="text" class="form-control fw-bold" id="supplier"></div>
-                        <div class="mb-3"><label class="text-muted small fw-bold">PRODUS</label><input type="text" class="form-control" id="product"></div>
-                        <div class="mb-3"><label class="text-muted small fw-bold">PREȚ / LITRU</label><input type="number" step="0.01" class="form-control fw-bold" id="price_per_liter"></div>
-                        <div class="mb-3"><label class="text-muted small fw-bold">CANTITATE (L)</label><input type="number" step="0.01" class="form-control fw-bold" id="quantity"></div>
-                        
-                        <div class="mt-4 mb-5 card border-0 shadow-sm rounded-4 bg-white p-3 text-center"><label class="fw-bold text-muted small d-block mb-1">TOTAL DE PLATĂ</label><input type="number" step="0.01" class="form-control fw-bold border-0 text-primary text-center fs-1 bg-transparent" id="total_with_vat"><small class="text-primary fw-bold">RON</small></div>
-                    </form>
+    <div id="detailsContainer">
+        <div class="alert alert-info small py-2"><i class="fa-solid fa-info-circle me-1"></i> Ești Online. AI-ul a completat datele:</div>
+
+        <div class="mb-3"><label class="text-muted small fw-bold ms-1">DATA</label><input type="date" class="form-control fw-bold" id="date"></div>
+
+        <div class="form-section"><i class="fa-regular fa-credit-card"></i><h4>Date Card</h4></div>
+        <div class="mb-3"><label class="text-muted small fw-bold">POSESOR</label><input type="text" class="form-control" id="posesorCard" readonly style="background:#e9ecef;"></div>
+        <div class="mb-3"><label class="text-muted small fw-bold">FURNIZOR</label><input type="text" class="form-control fw-bold text-primary" id="furnizorCardDisplay"></div>
+        <div class="mb-3"><label class="text-muted small fw-bold">DENUMIRE (NR)</label><input type="text" class="form-control" id="denumireCard" readonly style="background:#e9ecef;"></div>
+        
+        <div class="form-section"><i class="fa-solid fa-receipt"></i><h4>Detalii Bon</h4></div>
+        <div class="mb-3"><label class="text-muted small fw-bold">NR. BON</label><input type="number" class="form-control" id="receipt_number"></div>
+        <div class="mb-3"><label class="text-muted small fw-bold">STAȚIE</label><input type="text" class="form-control" id="station"></div>
+        <div class="mb-3"><label class="text-muted small fw-bold">FURNIZOR</label><input type="text" class="form-control fw-bold" id="supplier"></div>
+        <div class="mb-3"><label class="text-muted small fw-bold">PRODUS</label><input type="text" class="form-control" id="product"></div>
+        <div class="mb-3"><label class="text-muted small fw-bold">PREȚ / LITRU</label><input type="number" step="0.01" class="form-control fw-bold" id="price_per_liter"></div>
+        <div class="mb-3"><label class="text-muted small fw-bold">CANTITATE (L)</label><input type="number" step="0.01" class="form-control fw-bold" id="quantity"></div>
+        
+        <div class="mt-4 mb-5 card border-0 shadow-sm rounded-4 bg-white p-3 text-center">
+            <label class="fw-bold text-muted small d-block mb-1">TOTAL DE PLATĂ</label>
+            <input type="number" step="0.01" class="form-control fw-bold border-0 text-primary text-center fs-1 bg-transparent" id="total_with_vat">
+            <small class="text-primary fw-bold">RON</small>
+        </div>
+    </div>
+    
+    <div id="offlineMessage" class="hidden alert alert-warning text-center mt-3 shadow-sm border-0 rounded-4">
+        <i class="fa-solid fa-cloud-arrow-up fa-2x mb-2 text-warning"></i><br>
+        <strong>Mod Offline</strong><br>
+        Doar apasă <b>SALVEAZĂ</b>.<br>
+        AI-ul va extrage restul datelor când revine internetul.
+    </div>
+
+</form>
 
                     <div class="d-flex justify-content-between mt-4">
                         <button type="button" class="btn btn-light rounded-pill px-4" onclick="switchView('list')">Anulează</button>
@@ -302,6 +335,21 @@
         } else {
             badge.className = "badge bg-danger rounded-pill d-flex align-items-center gap-1 shadow-sm";
             badge.innerHTML = `<i class="fas fa-slash"></i> <span>OFFLINE (${queue.length})</span>`;
+        }
+    }
+
+    function updateFormVisibility() {
+        const details = document.getElementById('detailsContainer');
+        const msg = document.getElementById('offlineMessage');
+        
+        if (navigator.onLine) {
+            // ONLINE: Aratam tot
+            details.classList.remove('hidden');
+            msg.classList.add('hidden');
+        } else {
+            // OFFLINE: Ascundem detaliile, aratam doar sofer/auto si mesajul
+            details.classList.add('hidden');
+            msg.classList.remove('hidden');
         }
     }
 
@@ -445,6 +493,9 @@
         document.getElementById('uploadStep').classList.add('hidden'); 
         document.getElementById('formStep').classList.remove('hidden'); 
         document.getElementById('stickyImgBtn').classList.add('hidden');
+        
+        // AICI APELAM FUNCTIA DE VIZIBILITATE
+        updateFormVisibility();
     }
     
     // --- PROCESARE IMAGINE (COMPRESIE + AI) ---
@@ -524,13 +575,34 @@
     }
 
     function fillForm(res) {
-        hideLoader(); 
-        if(!res.success) { alert("Eroare AI: " + res.error); skipUpload(); return; }
+        hideLoader();
+        
+        // Dacă AI-ul dă eroare, tot trecem la formular ca să poți completa manual
+        if(!res.success) { 
+            alert("Eroare AI: " + res.error); 
+            skipUpload(); 
+            // Chiar dacă e eroare, dacă suntem online, arătăm câmpurile să le scrii tu
+            if(navigator.onLine) {
+                document.getElementById('detailsContainer').classList.remove('hidden');
+                document.getElementById('offlineMessage').classList.add('hidden');
+            }
+            return; 
+        }
         
         const d = res.data; 
+        
+        // 1. Trecem de la Cameră la Formular
         skipUpload(); 
+        
+        // 2. Activăm butonul de vizualizare poză mică
         document.getElementById('stickyImgBtn').classList.remove('hidden');
         
+        // 3. (CRITIC) DEOARECE AVEM DATE DE LA AI, ARĂTĂM CÂMPURILE DETALIATE
+        // Chiar dacă funcția 'skipUpload' le-ar ascunde, noi le forțăm să apară aici
+        document.getElementById('detailsContainer').classList.remove('hidden');
+        document.getElementById('offlineMessage').classList.add('hidden');
+        
+        // 4. Populăm câmpurile
         if(d.poza_url) document.getElementById('poza_url_drive').value = d.poza_url;
         if(d.date) document.getElementById('date').value = d.date;
         if(d.receipt_number) document.getElementById('receipt_number').value = d.receipt_number;
@@ -543,6 +615,8 @@
         if(d.posesor_card) document.getElementById('posesorCard').value = d.posesor_card;
         if(d.denumire_card) document.getElementById('denumireCard').value = d.denumire_card;
         if(d.furnizor_card) document.getElementById('furnizorCardDisplay').value = d.furnizor_card ? d.furnizor_card.toUpperCase() : '';
+        
+        // Completăm automat șoferul curent
         if(CURRENT_USER_NAME) document.getElementById('soferInput').value = CURRENT_USER_NAME;
     }
 
