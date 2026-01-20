@@ -321,6 +321,13 @@
             hideLoader();
             alert("Te rugăm să te loghezi prin Portal.");
             window.location.href = 'index.html';
+        }}
+
+        // FUNCTIE NOUA: Cere permisiune
+    function requestNotificationPermission() {
+        if (!("Notification" in window)) return;
+        if (Notification.permission !== "granted") {
+            Notification.requestPermission();
         }
     };
 
@@ -377,7 +384,6 @@
         const itemToSync = queue[0];
 
         try {
-            // Trimitem la server
             const response = await fetch(SCRIPT_URL, {
                 method: 'POST',
                 body: JSON.stringify(itemToSync)
@@ -385,15 +391,33 @@
             const res = await response.json();
 
             if (res.success) {
-                queue.shift(); // Stergem primul element
+                // Scoatem din coada
+                queue.shift(); 
                 localStorage.setItem(OFFLINE_KEY, JSON.stringify(queue));
                 
+                // --- AICI DECLANSAM NOTIFICAREA ---
+                // Incercam sa luam nr bon sau suma din raspuns sau din ce am trimis
+                // Deoarece itemToSync avea suma 0 (offline), backend-ul ar trebui sa ne zica ce a gasit AI-ul
+                // Dar pentru simplitate, notificam generic sau extragem din formData daca exista
+                
+                sendSyncNotification("Recent", "Online"); 
+                
                 if (queue.length > 0) {
-                    processQueue(); // Continuam
+                    processQueue(); 
                 } else {
                     syncMsg.classList.add('hidden');
                     updateNetworkStatus();
-                    alert("✅ Toate bonurile offline au fost sincronizate!");
+                    
+                    // Notificare finala mai detaliata
+                    if (Notification.permission === "granted") {
+                         new Notification("Sincronizare Completă", { 
+                             body: "Toate bonurile offline au fost procesate. Te rugăm să verifici corectitudinea datelor.",
+                             icon: "https://cdn-icons-png.flaticon.com/512/190/190411.png"
+                         });
+                    } else {
+                        alert("✅ Toate bonurile offline au fost sincronizate!");
+                    }
+                    
                     refreshDashboard();
                 }
             } else {
@@ -865,6 +889,24 @@
     function showLoader(t) { document.getElementById('loaderText').innerText=t; document.getElementById('loader').style.display='flex'; }
     function hideLoader() { document.getElementById('loader').style.display='none'; }
     function handleError(e) { hideLoader(); alert(e); }
+
+    function sendSyncNotification(nrBon, suma) {
+        if (!("Notification" in window)) return;
+        
+        if (Notification.permission === "granted") {
+            const notif = new Notification("✅ Bon Sincronizat!", {
+                body: `Bonul #${nrBon} (Suma: ${suma} RON) a fost procesat de AI. Verifică datele!`,
+                icon: "https://cdn-icons-png.flaticon.com/512/190/190411.png", // Iconita generica
+                vibrate: [200, 100, 200]
+            });
+            
+            // Daca apasa pe notificare, focus pe fereastra
+            notif.onclick = function() {
+                window.focus();
+                notif.close();
+            };
+        }
+    }
 </script>
 </body>
 </html>
