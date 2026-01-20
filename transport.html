@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+  <title>Registru Transport</title>
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --primary-gradient: linear-gradient(135deg, #0061f2 0%, #69a6ce 100%);
+      --bg-light: #f8f9fa;
+      --text-dark: #2d3748;
+      --accent-color: #0061f2;
+    }
+
+    body { 
+        background-color: var(--bg-light); 
+        font-family: 'Poppins', sans-serif; 
+        color: var(--text-dark); 
+        -webkit-font-smoothing: antialiased; 
+        padding-top: 160px; 
+        padding-bottom: 80px; 
+        margin: 0;
+    }
+
+    /* --- HEADER FIX --- */
+    .fixed-header-wrapper {
+        position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
+        background-color: var(--bg-light);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    }
+
+    .app-header { 
+        background: var(--primary-gradient); 
+        color: white; 
+        padding: 15px 20px 50px; 
+        border-radius: 0 0 30px 30px; 
+        position: relative; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+    }
+    .header-title { font-weight: 700; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
+    .user-pill { background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; font-size: 0.85rem; display: flex; align-items: center; gap: 5px; backdrop-filter: blur(5px); }
+    
+    .top-nav { 
+        display: flex; 
+        justify-content: center; 
+        gap: 10px; 
+        margin-top: -25px; 
+        margin-bottom: 10px; 
+        position: relative; 
+        padding: 0 15px;
+    }
+    .nav-pill-btn { 
+        border: none; padding: 12px 0; border-radius: 50px; font-weight: 600; font-size: 0.9rem; 
+        box-shadow: 0 4px 10px rgba(0,0,0,0.08); transition: 0.3s; flex: 1; text-align: center; max-width: 200px; 
+        cursor: pointer;
+    }
+    .nav-pill-btn.active { background: #2d3748; color: white; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.15); }
+    .nav-pill-btn:not(.active) { background: white; color: #4a5568; }
+    .nav-pill-btn:not(.active):active { transform: scale(0.95); background: #f8f9fa; }
+
+    .responsive-container { width: 100%; padding-right: 15px; padding-left: 15px; margin-right: auto; margin-left: auto; }
+    @media (min-width: 768px) { .responsive-container { max-width: 95%; padding-right: 40px; padding-left: 40px; } }
+    @media (min-width: 1200px) { .responsive-container { max-width: 1400px; } }
+
+    /* --- ACCORDION LUNA --- */
+    .accordion-item { border: none; background: transparent; margin-bottom: 15px; }
+    
+    .accordion-button { 
+        border-radius: 15px !important; 
+        box-shadow: 0 2px 5px rgba(0,0,0,0.03); 
+        color: #4a5568; 
+        font-weight: 700; 
+        padding: 15px; 
+        background: white;
+        font-size: 1rem;
+        display: flex;
+        justify-content: space-between; 
+        align-items: center;
+    }
+    .accordion-button::after { display: none; }
+    
+    .accordion-button:not(.collapsed) { 
+        background: #eef5ff; 
+        color: var(--accent-color); 
+    }
+    .month-chevron { transition: transform 0.3s; }
+    .accordion-button:not(.collapsed) .month-chevron { transform: rotate(180deg); }
+
+    .accordion-body { padding: 10px 5px; }
+
+    /* --- SUB-ACCORDION SANTIER --- */
+    .sub-accordion-btn {
+        background: white !important;
+        border: 1px solid #eef2f7;
+        margin-top: 6px;
+        border-radius: 12px !important;
+        padding: 10px 15px; 
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #4a5568;
+        width: 100%;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+    }
+    
+    .site-name-container { justify-self: start; text-align: left; }
+    .site-badge-container { justify-self: center; }
+    .site-arrow-container { justify-self: end; }
+
+    .site-badge {
+        background: var(--primary-gradient);
+        color: white;
+        font-size: 0.75rem;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-weight: 700;
+    }
+    
+    .fa-chevron-down.site-chev { transition: transform 0.3s; font-size: 0.8rem; color: #a0aec0; }
+    .sub-accordion-btn[aria-expanded="true"] .fa-chevron-down.site-chev { transform: rotate(180deg); color: var(--accent-color); }
+
+    /* --- TRIP CARD --- */
+    .trip-card { 
+        background: white; 
+        border-radius: 16px; 
+        padding: 12px 18px; 
+        margin-bottom: 8px; 
+        box-shadow: 0 2px 6px rgba(0,0,0,0.03); 
+        border-left: 4px solid var(--accent-color); 
+        position: relative; 
+        cursor: pointer; 
+        transition: 0.2s; 
+        width: 100%;
+    }
+    .trip-card:active { transform: scale(0.98); background: #fafafa; }
+    
+    .trip-date { 
+        font-size: 0.75rem; 
+        color: var(--accent-color); 
+        font-weight: 700; 
+        text-transform: uppercase; 
+        margin-bottom: 3px; 
+        display: flex; align-items: center; gap: 5px;
+    }
+    .trip-main { font-weight: 700; font-size: 0.95rem; color: #1a202c; margin-bottom: 2px; }
+    .trip-sub { font-size: 0.8rem; color: #718096; display: flex; align-items: center; gap: 5px; }
+    .trip-amount { 
+        font-size: 0.95rem; 
+        font-weight: 700; 
+        color: #16a34a; 
+        position: absolute; 
+        top: 15px; 
+        right: 15px; 
+    }
+
+    /* --- BUTON ACTUALIZEAZA --- */
+    .refresh-container {
+        display: flex; 
+        justify-content: flex-end; 
+        margin-bottom: 15px;
+        padding-right: 5px;
+        margin-top: 15px;
+    }
+    .btn-refresh-custom {
+        background-color: #edf2f7; 
+        color: #4a5568; 
+        border: none;
+        font-weight: 600;
+        font-size: 0.8rem; 
+        padding: 8px 18px; 
+        border-radius: 20px;
+        transition: 0.2s;
+        display: flex; align-items: center; gap: 5px;
+    }
+    .btn-refresh-custom:hover { background-color: #cbd5e0; color: #2d3748; }
+
+    /* --- ALTELE --- */
+    .detail-section { margin-bottom: 20px; border-bottom: 1px solid #f0f0f0; padding-bottom: 15px; }
+    .detail-section:last-child { border-bottom: none; }
+    .detail-section-title { font-size: 0.75rem; color: var(--accent-color); font-weight: 700; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 0.5px; }
+    .detail-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; }
+    .detail-label { color: #718096; font-weight: 500; text-transform: uppercase; font-size: 0.8rem; }
+    .detail-val { font-weight: 600; color: #2d3748; text-align: right; max-width: 65%; }
+
+    .form-container-width { max-width: 600px; margin: 0 auto; }
+    .form-control, .form-select { border-radius: 12px; border: 1px solid #e2e8f0; padding: 12px; font-size: 0.95rem; }
+    .form-control:focus { border-color: var(--accent-color); box-shadow: 0 0 0 3px rgba(0, 97, 242, 0.1); }
+    .form-section-title { color: var(--accent-color); font-weight: 700; margin: 25px 0 10px; font-size: 0.9rem; text-transform: uppercase; }
+
+    .autocomplete-wrapper { position: relative; }
+    .autocomplete-list { position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid #eee; border-radius: 12px; max-height: 200px; overflow-y: auto; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: none; }
+    .autocomplete-item { padding: 12px; border-bottom: 1px solid #f7f7f7; font-size: 0.9rem; cursor: pointer; }
+    .autocomplete-item:hover { background: #f0f4ff; }
+    .photo-box { border: 2px dashed #cbd5e0; border-radius: 12px; padding: 15px; text-align: center; color: #a0aec0; background: #fff; cursor: pointer; }
+    .photo-box.has-file { border-color: #16a34a; color: #16a34a; background: #f0fdf4; }
+    .hidden { display: none !important; }
+    #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); z-index:9999; display:flex; justify-content:center; align-items:center; flex-direction:column; }
+    
+    /* Buton Inapoi */
+    .btn-back { background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 50px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-right: 10px; cursor: pointer; transition: 0.2s; }
+    .btn-back:hover { background: rgba(255,255,255,0.3); }
+
+  </style>
+</head>
+<body>
+
+  <div id="loader">
+    <div class="spinner-border text-primary" role="status"></div>
+    <div class="mt-2 fw-bold text-muted" id="loaderText">Se sincronizează...</div>
+  </div>
+
+  <div id="main-app" class="hidden">
+    
+    <div class="fixed-header-wrapper">
+        <div class="app-header">
+          <div class="d-flex align-items-center">
+              <button class="btn-back" onclick="window.location.href='index.html'"><i class="fa-solid fa-arrow-left"></i></button>
+              <div class="header-title"><i class="fas fa-truck-moving"></i> Transport</div>
+          </div>
+          <div class="user-pill"><i class="fas fa-user-circle"></i> <span id="userDisplay">User</span></div>
+        </div>
+
+        <div class="top-nav">
+           <button class="nav-pill-btn active" id="tab-list" onclick="switchView('list')">Istoric Curse</button>
+           <button class="nav-pill-btn" id="tab-add" onclick="switchView('add')">Adaugă Cursă</button>
+        </div>
+    </div>
+
+    <div class="responsive-container">
+      
+      <div id="view-list">
+        <div class="refresh-container">
+             <button type="button" class="btn-refresh-custom shadow-sm" onclick="loadHistory()">
+                <i class="fa-solid fa-rotate"></i> Actualizează
+             </button>
+        </div>
+        <div id="trips-container" class="pb-5"></div>
+      </div>
+
+      <div id="view-add" class="hidden pb-5">
+         <div class="form-container-width">
+             <form id="transportForm" onsubmit="handleSubmit(event)">
+                <input type="hidden" id="editId"> 
+                
+                <div class="card p-3 border-0 shadow-sm mb-3">
+                  <div class="form-section-title"><i class="far fa-calendar-alt me-2"></i>General</div>
+                  <div class="row">
+                     <div class="col-6 mb-3"><label class="small text-muted fw-bold">Data Cursă</label><input type="date" class="form-control" id="dataTransport" required></div>
+                     <div class="col-6 mb-3"><label class="small text-muted fw-bold">Data Facturare</label><input type="date" class="form-control" id="dataFacturare" required></div>
+                  </div>
+                  <div class="mb-3">
+                     <label class="small text-muted fw-bold">Șofer</label>
+                     <input type="text" class="form-control bg-light" id="sofer" readonly>
+                  </div>
+                  <div class="mb-3">
+                     <label class="small text-muted fw-bold">Auto</label>
+                     <div class="autocomplete-wrapper"><input type="text" class="form-control" id="numarAuto" placeholder="Caută..." required><div id="list-numarAuto" class="autocomplete-list"></div></div>
+                  </div>
+                </div>
+
+                <div class="card p-3 border-0 shadow-sm mb-3">
+                   <div class="form-section-title"><i class="fas fa-map-marker-alt me-2"></i>Locație & Marfă</div>
+                   <div class="mb-3"><label class="small text-muted fw-bold">Șantier</label><div class="autocomplete-wrapper"><input type="text" class="form-control" id="santier" required><div id="list-santier" class="autocomplete-list"></div></div></div>
+                   <div class="row">
+                      <div class="col-6 mb-3"><label class="small text-muted fw-bold">Încărcare</label><div class="autocomplete-wrapper"><input type="text" class="form-control" id="locIncarcare" required><div id="list-locIncarcare" class="autocomplete-list"></div></div></div>
+                      <div class="col-6 mb-3"><label class="small text-muted fw-bold">Descărcare</label><div class="autocomplete-wrapper"><input type="text" class="form-control" id="locDescarcare" required><div id="list-locDescarcare" class="autocomplete-list"></div></div></div>
+                   </div>
+                   <div class="mb-3"><label class="small text-muted fw-bold">Material</label><div class="autocomplete-wrapper"><input type="text" class="form-control" id="material" required><div id="list-material" class="autocomplete-list"></div></div></div>
+                </div>
+
+                <div class="card p-3 border-0 shadow-sm mb-3">
+                   <div class="form-section-title"><i class="fas fa-file-invoice me-2"></i>Documente</div>
+                   <div class="row mb-2">
+                      <div class="col-6"><label class="small text-muted fw-bold">Nr Aviz 1</label><input type="number" class="form-control" id="numarAviz1" required></div>
+                      <div class="col-6"><label class="small text-muted fw-bold">Tone</label><input type="number" step="0.01" class="form-control" id="toneAviz1" required></div>
+                   </div>
+                   <div class="d-flex gap-2 mb-3">
+                      <div class="photo-box flex-fill" onclick="triggerPhoto('fileAviz1')"><i class="fas fa-camera"></i> Aviz 1<input type="file" id="fileAviz1" hidden onchange="previewFile(this)"></div>
+                      <div class="photo-box flex-fill" onclick="triggerPhoto('fileTichet1')"><i class="fas fa-ticket-alt"></i> Tichet<input type="file" id="fileTichet1" hidden onchange="previewFile(this)"></div>
+                   </div>
+
+                   <div class="form-check form-switch mb-2">
+                      <input class="form-check-input" type="checkbox" id="checkAviz2" onchange="toggleDiv('secAviz2', this.checked)">
+                      <label class="form-check-label fw-bold">Al doilea aviz?</label>
+                   </div>
+                   <div id="secAviz2" class="hidden p-3 bg-light rounded mb-3">
+                      <div class="row mb-2">
+                         <div class="col-6"><input type="number" class="form-control" id="numarAviz2" placeholder="Nr"></div>
+                         <div class="col-6"><input type="number" step="0.01" class="form-control" id="toneAviz2" placeholder="Tone"></div>
+                      </div>
+                      <div class="photo-box" onclick="triggerPhoto('fileAviz2')"><i class="fas fa-camera"></i> Poza Aviz 2<input type="file" id="fileAviz2" hidden onchange="previewFile(this)"></div>
+                   </div>
+
+                   <div class="form-check form-switch mb-2">
+                      <input class="form-check-input" type="checkbox" id="checkCMR" onchange="toggleDiv('secCMR', this.checked)">
+                      <label class="form-check-label fw-bold">CMR?</label>
+                   </div>
+                   <div id="secCMR" class="hidden p-3 bg-light rounded mb-3">
+                      <div class="photo-box" onclick="triggerPhoto('fileCMR')"><i class="fas fa-file"></i> Poza CMR<input type="file" id="fileCMR" hidden onchange="previewFile(this)"></div>
+                   </div>
+
+                   <div class="form-check form-switch mb-2">
+                      <input class="form-check-input" type="checkbox" id="checkDel" onchange="toggleDiv('secDel', this.checked)">
+                      <label class="form-check-label fw-bold">Delegație?</label>
+                   </div>
+                   <div id="secDel" class="hidden p-3 bg-light rounded mb-3">
+                       <input type="number" class="form-control mb-2" id="numarDelegatie" placeholder="Număr">
+                       <div class="photo-box" onclick="triggerPhoto('fileDelegatie')"><i class="fas fa-user-tag"></i> Poza Delegație<input type="file" id="fileDelegatie" hidden onchange="previewFile(this)"></div>
+                   </div>
+                </div>
+
+                <div class="card p-3 border-0 shadow-sm mb-4 text-center">
+                   <div class="btn-group w-100" role="group">
+                      <input type="radio" class="btn-check" name="statusCursa" id="statusConf" value="CONFIRMATA" checked>
+                      <label class="btn btn-outline-success" for="statusConf">CONFIRMATĂ</label>
+                      <input type="radio" class="btn-check" name="statusCursa" id="statusNeconf" value="NECONFIRMATA">
+                      <label class="btn btn-outline-danger" for="statusNeconf">NECONFIRMATĂ</label>
+                   </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow">SALVEAZĂ CURSA</button>
+                <div class="text-center mt-3 mb-5">
+                   <a href="#" onclick="switchView('list')" class="text-muted text-decoration-none">Anulează</a>
+                </div>
+             </form>
+         </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="modal fade" id="detailsModal" tabindex="-1">
+     <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow">
+           <div class="modal-header border-0 bg-white">
+              <h5 class="modal-title fw-bold text-dark">Detalii Cursă</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+           </div>
+           <div class="modal-body bg-white pt-2 px-4 pb-4" id="detailsBody"></div>
+           <div class="modal-footer border-0 bg-light rounded-bottom-4 justify-content-between p-3">
+              <button type="button" class="btn btn-outline-danger border-0 fw-bold" onclick="deleteCurrentTrip()"><i class="fas fa-trash-alt me-2"></i>Șterge</button>
+              <div>
+                 <button class="btn btn-light rounded-pill me-2 border" onclick="showPhotos()"><i class="fas fa-eye text-secondary me-1"></i> Poze</button>
+                 <button class="btn btn-primary rounded-pill px-4 fw-bold" onclick="editCurrentTrip()"><i class="fas fa-pen me-2"></i> Editează</button>
+              </div>
+           </div>
+        </div>
+     </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // ==========================================
+    // CONFIGURARE OBLIGATORIE
+    // ==========================================
+    const SCRIPT_URL = "https://script.google.com/a/macros/logissupport.ro/s/AKfycbz6Nyardm3ixuhS7jvs1Xt8Rq1pIUrtw4a8QdeLTjM9Oz5YEFgbdPAH1nD3o7Kw3sJM/exec"; 
+    
+    let GLOBAL_DATA = {};
+    let USER_INFO = { email: "", nume: "" };
+    let FILE_CACHE = {};
+    let USER_TRIPS = [];
+    let CURRENT_TRIP_ID = null;
+
+    window.onload = function() {
+        showLoader("Se sincronizează...");
+        const savedUser = localStorage.getItem('pabecon_user');
+        
+        if (savedUser) {
+            const u = JSON.parse(savedUser);
+            USER_INFO.email = u.email;
+            USER_INFO.nume = u.nume;
+            document.getElementById('userDisplay').innerText = u.nume;
+            document.getElementById('main-app').classList.remove('hidden');
+            
+            // FETCH DROP-DOWNS
+            fetch(`${SCRIPT_URL}?actiune=getTransportDropdowns`)
+              .then(r => r.json())
+              .then(d => {
+                  GLOBAL_DATA = d;
+                  initApp();
+              })
+              .catch(err => {
+                  hideLoader();
+                  alert("Eroare conexiune: " + err);
+              });
+        } else {
+            hideLoader();
+            alert("Nu esti logat!");
+            window.location.href = 'index.html';
+        }
+    }
+
+    function renderTrips(trips) {
+       const container = document.getElementById('trips-container');
+       container.innerHTML = '';
+       if(!trips.length) { container.innerHTML = '<div class="text-center mt-5">Nu există date.</div>'; return; }
+
+       const groupedByMonth = {};
+       trips.forEach(t => {
+          let dStr = t.DATA_TRANSPORT;
+          if(typeof dStr !== 'string') try { dStr = new Date(dStr.value).toISOString().split('T')[0]; } catch(e) { dStr = "2024-01-01"; }
+          const y = dStr.split('-')[0];
+          const m = parseInt(dStr.split('-')[1]);
+          const mNames = ["", "IANUARIE", "FEBRUARIE", "MARTIE", "APRILIE", "MAI", "IUNIE", "IULIE", "AUGUST", "SEPTEMBRIE", "OCTOMBRIE", "NOIEMBRIE", "DECEMBRIE"];
+          const key = mNames[m] + " " + y;
+          if(!groupedByMonth[key]) groupedByMonth[key] = [];
+          groupedByMonth[key].push(t);
+       });
+
+       let idx = 0;
+       for(const [monthKey, monthTrips] of Object.entries(groupedByMonth)) {
+          idx++;
+          const accordionId = `accMonth${idx}`;
+          
+          let monthHtml = `
+            <div class="accordion-item">
+               <h2 class="accordion-header">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${accordionId}">
+                     <span><i class="far fa-calendar-alt me-2"></i> ${monthKey}</span>
+                     <i class="fas fa-chevron-down month-chevron"></i>
+                  </button>
+               </h2>
+               <div id="${accordionId}" class="accordion-collapse collapse" data-bs-parent="#trips-container">
+                  <div class="accordion-body">
+          `;
+
+          const groupedBySite = {};
+          monthTrips.forEach(t => {
+              const site = t.SANTIER || 'FĂRĂ ȘANTIER';
+              if(!groupedBySite[site]) groupedBySite[site] = [];
+              groupedBySite[site].push(t);
+          });
+
+          let subIdx = 0;
+          for(const [siteKey, siteTrips] of Object.entries(groupedBySite)) {
+              subIdx++;
+              const subId = `sub_${idx}_${subIdx}`;
+              
+              monthHtml += `
+                <div class="accordion mt-1">
+                    <button class="sub-accordion-btn collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${subId}" aria-expanded="false">
+                        <div class="site-name-container"><span class="text-dark fw-bold">${siteKey}</span></div>
+                        <div class="site-badge-container"><span class="site-badge">${siteTrips.length}</span></div>
+                        <div class="site-arrow-container"><i class="fas fa-chevron-down site-chev"></i></div>
+                    </button>
+                    <div id="${subId}" class="accordion-collapse collapse">
+                        <div class="pt-2">
+              `;
+
+              siteTrips.forEach(t => {
+                 let displayDate = t.DATA_TRANSPORT;
+                 // Asiguram formatarea datei
+                 try {
+                     if(typeof displayDate === 'string' && displayDate.includes('T')) {
+                         displayDate = new Date(displayDate).toLocaleDateString('ro-RO');
+                     } else if (typeof displayDate === 'object') {
+                         displayDate = new Date(displayDate.value).toLocaleDateString('ro-RO');
+                     }
+                 } catch(e) { displayDate = t.DATA_TRANSPORT; }
+                 
+                 monthHtml += `
+                    <div class="trip-card" onclick="openDetail('${t.ID}')">
+                       <div class="trip-date"><i class="far fa-calendar me-1"></i> ${displayDate}</div>
+                       <div class="trip-main">${t.SOFER || 'Nespecificat'}</div>
+                       <div class="trip-sub"><i class="fas fa-cubes me-1"></i> ${t.MATERIAL} &bull; ${t.NR_INMATRICULARE}</div>
+                       <div class="trip-amount">${t.AVIZ_1_TONE || 0} t</div>
+                    </div>
+                 `;
+              });
+              monthHtml += `</div></div></div>`; 
+          }
+          monthHtml += `</div></div></div>`;
+          container.insertAdjacentHTML('beforeend', monthHtml);
+       }
+    }
+
+    function openDetail(id) {
+       CURRENT_TRIP_ID = id;
+       const t = USER_TRIPS.find(x => x.ID === id);
+       if(!t) return;
+       const body = document.getElementById('detailsBody');
+       const detailsModal = new bootstrap.Modal(document.getElementById('detailsModal'));
+       const dVal = (v) => v || '-';
+       
+       let displayDate = t.DATA_TRANSPORT;
+        try {
+             if(typeof displayDate === 'string' && displayDate.includes('T')) {
+                 displayDate = new Date(displayDate).toLocaleDateString('ro-RO');
+             } else if (typeof displayDate === 'object') {
+                 displayDate = new Date(displayDate.value).toLocaleDateString('ro-RO');
+             }
+         } catch(e) { displayDate = t.DATA_TRANSPORT; }
+
+       body.innerHTML = `
+         <div class="detail-section">
+            <div class="detail-section-title">Informații Generale</div>
+            <div class="detail-row"><span class="detail-label">DATĂ</span><span class="detail-val">${displayDate}</span></div>
+            <div class="detail-row"><span class="detail-label">ȘOFER</span><span class="detail-val">${dVal(t.SOFER)}</span></div>
+            <div class="detail-row"><span class="detail-label">AUTO</span><span class="detail-val">${dVal(t.NR_INMATRICULARE)}</span></div>
+            <div class="detail-row"><span class="detail-label">STATUS</span><span class="detail-val fw-bold ${t.STATUS_CURSA=='CONFIRMATA'?'text-success':'text-danger'}">${dVal(t.STATUS_CURSA)}</span></div>
+         </div>
+         <div class="detail-section">
+            <div class="detail-section-title">Locație & Marfă</div>
+            <div class="detail-row"><span class="detail-label">ȘANTIER</span><span class="detail-val">${dVal(t.SANTIER)}</span></div>
+            <div class="detail-row"><span class="detail-label">MATERIAL</span><span class="detail-val">${dVal(t.MATERIAL)}</span></div>
+            <div class="detail-row"><span class="detail-label">ÎNCĂRCARE</span><span class="detail-val">${dVal(t.LOC_INCARCARE)}</span></div>
+            <div class="detail-row"><span class="detail-label">DESCĂRCARE</span><span class="detail-val">${dVal(t.LOC_DESCARCARE)}</span></div>
+         </div>
+         <div class="detail-section">
+            <div class="detail-section-title">Documente</div>
+            <div class="detail-row"><span class="detail-label">AVIZ 1</span><span class="detail-val">${t.AVIZ_1_NUMAR} (${t.AVIZ_1_TONE} t)</span></div>
+            ${t.AVIZ_2 === 'DA' ? `<div class="detail-row"><span class="detail-label">AVIZ 2</span><span class="detail-val">${t.AVIZ_2_NUMAR} (${t.AVIZ_2_TONE} t)</span></div>` : ''}
+            <div class="detail-row"><span class="detail-label">CMR</span><span class="detail-val">${t.CMR}</span></div>
+            <div class="detail-row"><span class="detail-label">DELEGAȚIE</span><span class="detail-val">${t.DELEGATIE} ${t.DELEGATIE === 'DA' ? `(${t.DELEGATIE_NUMAR})` : ''}</span></div>
+         </div>
+       `;
+       detailsModal.show();
+    }
+
+    function loadHistory() {
+       showLoader("Se actualizează...");
+       // FETCH GET
+       fetch(`${SCRIPT_URL}?actiune=getUserTrips&sofer=${encodeURIComponent(USER_INFO.nume)}`)
+           .then(r => r.json())
+           .then(trips => {
+              hideLoader();
+              USER_TRIPS = trips;
+              renderTrips(trips);
+           })
+           .catch(e => {
+               hideLoader();
+               console.error(e);
+               document.getElementById('trips-container').innerHTML = '<div class="text-center text-danger mt-5">Eroare incarcare date.</div>';
+           });
+    }
+    
+    function initApp() {
+       const today = new Date().toISOString().split('T')[0];
+       document.getElementById('dataTransport').value = today;
+       document.getElementById('dataFacturare').value = today;
+       document.getElementById('sofer').value = USER_INFO.nume;
+       setupAutocomplete('numarAuto', 'list-numarAuto', GLOBAL_DATA.auto || []);
+       setupAutocomplete('santier', 'list-santier', GLOBAL_DATA.santiere || []);
+       setupAutocomplete('locIncarcare', 'list-locIncarcare', GLOBAL_DATA.locatii || []);
+       setupAutocomplete('locDescarcare', 'list-locDescarcare', GLOBAL_DATA.locatii || []);
+       setupAutocomplete('material', 'list-material', GLOBAL_DATA.materiale || []);
+       loadHistory();
+    }
+
+    function switchView(view) {
+       if(view === 'list') {
+          document.getElementById('view-list').classList.remove('hidden');
+          document.getElementById('view-add').classList.add('hidden');
+          document.getElementById('tab-list').classList.add('active');
+          document.getElementById('tab-add').classList.remove('active');
+          document.getElementById('tab-add').innerText = "Adaugă Cursă";
+          loadHistory();
+       } else {
+          document.getElementById('view-list').classList.add('hidden');
+          document.getElementById('view-add').classList.remove('hidden');
+          document.getElementById('tab-list').classList.remove('active');
+          document.getElementById('tab-add').classList.add('active');
+          if (!document.getElementById('editId').value) resetForm();
+       }
+    }
+
+    function resetForm() {
+       document.getElementById('transportForm').reset();
+       document.getElementById('editId').value = ""; 
+       document.getElementById('sofer').value = USER_INFO.nume;
+       const today = new Date().toISOString().split('T')[0];
+       document.getElementById('dataTransport').value = today;
+       document.getElementById('dataFacturare').value = today;
+       FILE_CACHE = {};
+       document.querySelectorAll('.photo-box').forEach(el => el.classList.remove('has-file'));
+       document.getElementById('secAviz2').classList.add('hidden');
+       document.getElementById('secCMR').classList.add('hidden');
+       document.getElementById('secDel').classList.add('hidden');
+    }
+
+    function editCurrentTrip() {
+       const t = USER_TRIPS.find(x => x.ID === CURRENT_TRIP_ID);
+       if(!t) return;
+       const modalEl = document.getElementById('detailsModal');
+       const modal = bootstrap.Modal.getInstance(modalEl);
+       modal.hide();
+       switchView('add');
+       document.getElementById('tab-add').innerText = "Editare Cursă";
+       document.getElementById('editId').value = t.ID;
+       
+       const setVal = (id, val) => { if(document.getElementById(id)) document.getElementById(id).value = val || ''; };
+       const setCheck = (id, val) => { const chk = document.getElementById(id); chk.checked = (val === 'DA'); chk.onchange(); };
+       
+       // Handle Dates
+       let dt = t.DATA_TRANSPORT; 
+       if(typeof dt === 'object') dt = new Date(dt.value).toISOString().split('T')[0];
+       else if(dt.includes('T')) dt = dt.split('T')[0];
+       
+       let df = t.DATA_FACTURARE; 
+       if(typeof df === 'object') df = new Date(df.value).toISOString().split('T')[0];
+       else if(df.includes('T')) df = df.split('T')[0];
+
+       setVal('dataTransport', dt); setVal('dataFacturare', df);
+       setVal('sofer', t.SOFER); setVal('numarAuto', t.NR_INMATRICULARE);
+       setVal('santier', t.SANTIER); setVal('locIncarcare', t.LOC_INCARCARE);
+       setVal('locDescarcare', t.LOC_DESCARCARE); setVal('material', t.MATERIAL);
+       setVal('numarAviz1', t.AVIZ_1_NUMAR); setVal('toneAviz1', t.AVIZ_1_TONE);
+       
+       if(t.AVIZ_1_POZA) FILE_CACHE['fileAviz1'] = t.AVIZ_1_POZA;
+       if(t.TICHET_1_CANTAR_POZA) FILE_CACHE['fileTichet1'] = t.TICHET_1_CANTAR_POZA;
+       
+       setCheck('checkAviz2', t.AVIZ_2); setVal('numarAviz2', t.AVIZ_2_NUMAR); setVal('toneAviz2', t.AVIZ_2_TONE);
+       if(t.AVIZ_2_POZA) FILE_CACHE['fileAviz2'] = t.AVIZ_2_POZA;
+       
+       setCheck('checkCMR', t.CMR); if(t['CMR POZA']) FILE_CACHE['fileCMR'] = t['CMR POZA'];
+       setCheck('checkDel', t.DELEGATIE); setVal('numarDelegatie', t.DELEGATIE_NUMAR);
+       if(t.DELEGATIE_POZA) FILE_CACHE['fileDelegatie'] = t.DELEGATIE_POZA;
+       
+       if(t.STATUS_CURSA === 'NECONFIRMATA') document.getElementById('statusNeconf').checked = true;
+       else document.getElementById('statusConf').checked = true;
+       
+       for(let k in FILE_CACHE) {
+           const input = document.getElementById(k);
+           if(input && FILE_CACHE[k]) input.parentElement.classList.add('has-file');
+       }
+    }
+
+    function deleteCurrentTrip() {
+       if(!confirm("Ești sigur?")) return;
+       showLoader("Se șterge...");
+       
+       // FETCH POST DELETE
+       fetch(SCRIPT_URL, {
+           method: 'POST',
+           body: JSON.stringify({
+               actiune: 'deleteTransport',
+               id: CURRENT_TRIP_ID,
+               email: USER_INFO.email
+           })
+       })
+       .then(r => r.json())
+       .then(res => {
+          hideLoader();
+          const modal = bootstrap.Modal.getInstance(document.getElementById('detailsModal'));
+          modal.hide();
+          loadHistory();
+       })
+       .catch(e => { hideLoader(); alert("Eroare stergere: " + e); });
+    }
+
+    function showPhotos() {
+        const t = USER_TRIPS.find(x => x.ID === CURRENT_TRIP_ID);
+        let urls = [];
+        if(t.AVIZ_1_POZA) urls.push(t.AVIZ_1_POZA);
+        if(t.TICHET_1_CANTAR_POZA) urls.push(t.TICHET_1_CANTAR_POZA);
+        if(t.AVIZ_2_POZA) urls.push(t.AVIZ_2_POZA);
+        if(t['CMR POZA']) urls.push(t['CMR POZA']);
+        if(t.DELEGATIE_POZA) urls.push(t.DELEGATIE_POZA);
+        if(urls.length === 0) alert("Nu există poze.");
+        else urls.forEach(u => window.open(u, '_blank'));
+    }
+
+    function handleSubmit(e) {
+       e.preventDefault();
+       showLoader("Se salvează...");
+       const formData = {
+          editId: document.getElementById('editId').value,
+          dataTransport: document.getElementById('dataTransport').value,
+          dataFacturare: document.getElementById('dataFacturare').value,
+          sofer: document.getElementById('sofer').value,
+          numarAuto: document.getElementById('numarAuto').value,
+          santier: document.getElementById('santier').value,
+          locIncarcare: document.getElementById('locIncarcare').value,
+          locDescarcare: document.getElementById('locDescarcare').value,
+          material: document.getElementById('material').value,
+          numarAviz1: document.getElementById('numarAviz1').value,
+          toneAviz1: document.getElementById('toneAviz1').value,
+          pozaAviz1: FILE_CACHE['fileAviz1'] || '',
+          pozaTichet1: FILE_CACHE['fileTichet1'] || '',
+          hasAviz2: document.getElementById('checkAviz2').checked,
+          numarAviz2: document.getElementById('numarAviz2').value,
+          toneAviz2: document.getElementById('toneAviz2').value,
+          pozaAviz2: FILE_CACHE['fileAviz2'] || '',
+          hasCMR: document.getElementById('checkCMR').checked,
+          pozaCMR: FILE_CACHE['fileCMR'] || '',
+          hasDelegatie: document.getElementById('checkDel').checked,
+          numarDelegatie: document.getElementById('numarDelegatie').value,
+          pozaDelegatie: FILE_CACHE['fileDelegatie'] || '',
+          statusCursa: document.querySelector('input[name="statusCursa"]:checked').value
+       };
+       
+       // FETCH POST SAVE
+       fetch(SCRIPT_URL, {
+           method: 'POST',
+           body: JSON.stringify({
+               actiune: 'saveTransport',
+               formData: formData,
+               email: USER_INFO.email
+           })
+       })
+       .then(r => r.json())
+       .then(res => {
+          hideLoader();
+          if(res.success) {
+             alert(res.message);
+             switchView('list');
+          } else { alert(res.message); }
+       })
+       .catch(e => { hideLoader(); alert("Eroare salvare: " + e); });
+    }
+
+    function setupAutocomplete(id, listId, data) {
+       const inp = document.getElementById(id);
+       const list = document.getElementById(listId);
+       const safeData = data || [];
+       inp.oninput = function() {
+          const val = this.value.toLowerCase();
+          list.innerHTML = '';
+          if(!val) { list.style.display='none'; return; }
+          const matches = safeData.filter(x => x && x.toLowerCase().includes(val));
+          if(matches.length) {
+             list.style.display = 'block';
+             matches.forEach(m => {
+                const d = document.createElement('div');
+                d.className = 'autocomplete-item'; d.innerText = m;
+                d.onclick = () => { inp.value = m; list.style.display='none'; };
+                list.appendChild(d);
+             });
+          } else list.style.display='none';
+       };
+       document.addEventListener('click', e => { if(e.target!==inp) list.style.display='none'; });
+    }
+
+    function triggerPhoto(id) { document.getElementById(id).click(); }
+    function previewFile(input) {
+       const f = input.files[0];
+       if(!f) return;
+       const r = new FileReader();
+       r.onload = e => {
+          FILE_CACHE[input.id] = e.target.result.split(',')[1];
+          input.parentElement.classList.add('has-file');
+       };
+       r.readAsDataURL(f);
+    }
+    function toggleDiv(id, s) { const el = document.getElementById(id); if(s) el.classList.remove('hidden'); else el.classList.add('hidden'); }
+    function showLoader(t) { document.getElementById('loaderText').innerText = t; document.getElementById('loader').style.display = 'flex'; }
+    function hideLoader() { document.getElementById('loader').style.display = 'none'; }
+  </script>
+</body>
+</html>
