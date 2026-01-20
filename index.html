@@ -238,26 +238,34 @@
   </div>
 
 <script>
+  // --- CONFIGURARE ---
+  // AICI AM PUS LINK-UL TAU:
+  const SCRIPT_URL = "https://script.google.com/a/macros/logissupport.ro/s/AKfycbyTio0OHWv8GtsMJ20eqm6eDv91QgJnmFrDAO37T3w9bhHs28HBYk9Cwk1bWXELaOb98g/exec";
+
   let GLOBAL_SOFERI = [];
 
+  // 1. La incarcare, cerem lista de soferi din Script
   window.onload = function() {
-    google.script.run
-      .withSuccessHandler(data => {
-          if (data && data.soferi) {
-              GLOBAL_SOFERI = data.soferi;
-              setupCustomDropdown('loginName', 'loginList', GLOBAL_SOFERI);
-          }
-      })
-      .getNomenclatoare();
-
+    // Verificam daca userul e deja logat
     const saved = localStorage.getItem('pabecon_user');
     if(saved) {
       const u = JSON.parse(saved);
       showMenu(u.nume);
     }
+
+    // Cerem Nomenclatoarele (Soferii)
+    fetch(`${SCRIPT_URL}?actiune=getNomenclatoare`)
+      .then(response => response.json())
+      .then(data => {
+          if (data && data.soferi) {
+              GLOBAL_SOFERI = data.soferi;
+              setupCustomDropdown('loginName', 'loginList', GLOBAL_SOFERI);
+          }
+      })
+      .catch(err => console.error("Eroare incarcare soferi:", err));
   }
 
-  // --- LOGICA ---
+  // 2. Functia de Login rescrisa pentru GitHub
   function doPortalLogin() {
     const e = document.getElementById('loginEmail').value;
     const p = document.getElementById('loginPass').value;
@@ -274,25 +282,70 @@
     
     const btn = event.target;
     const oldText = btn.innerText;
-    btn.innerText = "...";
-    
-    google.script.run.withSuccessHandler(res => {
+    btn.innerText = "Se verifică...";
+    btn.disabled = true;
+
+    // Construim URL-ul cu parametri
+    const url = `${SCRIPT_URL}?actiune=login&email=${encodeURIComponent(e)}&pass=${encodeURIComponent(p)}&nume=${encodeURIComponent(n)}`;
+
+    // Trimitem cererea catre Google Script
+    fetch(url)
+    .then(response => response.json())
+    .then(res => {
       btn.innerText = oldText;
+      btn.disabled = false;
+
       if(res.success) {
+        // Succes - Salvam si intram
         localStorage.setItem('pabecon_user', JSON.stringify({ email: e, nume: res.nume }));
         showMenu(res.nume);
       } else {
+        // Eroare (parola gresita etc)
         if(res.error === 'PASS_MISMATCH') {
             errDiv.innerText = "Parolă incorectă!";
             forgotLink.style.display = 'block';
         } else if (res.error === 'NUME_MISMATCH') {
             errDiv.innerText = "Numele nu corespunde cu emailul!";
         } else {
-            errDiv.innerText = res.error;
+            errDiv.innerText = res.error || "Eroare necunoscută";
         }
       }
-    }).handleUserAuth(e, p, n);
+    })
+    .catch(err => {
+        btn.innerText = oldText;
+        btn.disabled = false;
+        errDiv.innerText = "Eroare conexiune server.";
+        console.error(err);
+    });
   }
+
+  // 3. Functia de Resetare Parola
+  function confirmResetPass() {
+    const newP = document.getElementById('newPass').value;
+    const e = document.getElementById('loginEmail').value;
+    const n = document.getElementById('loginName').value;
+    if(!newP || newP.length < 4) return alert("Parolă prea scurtă.");
+
+    const btn = event.target;
+    btn.innerText = "...";
+    
+    const url = `${SCRIPT_URL}?actiune=resetPass&email=${encodeURIComponent(e)}&nume=${encodeURIComponent(n)}&newPass=${encodeURIComponent(newP)}`;
+
+    fetch(url)
+    .then(r => r.json())
+    .then(res => {
+        btn.innerText = "SALVEAZĂ";
+        if(res.success) { 
+            alert("Salvat cu succes!"); 
+            cancelReset(); 
+            document.getElementById('loginPass').value = newP; 
+        } else {
+            alert(res.message || "Eroare la resetare");
+        }
+    });
+  }
+
+  // --- RESTUL FUNCTIILOR UI (Raman la fel, doar navigarea se schimba) ---
 
   function showResetPass() {
     document.getElementById('login-section').classList.add('hidden');
@@ -301,17 +354,6 @@
   function cancelReset() {
     document.getElementById('login-section').classList.remove('hidden');
     document.getElementById('reset-section').classList.add('hidden');
-  }
-  function confirmResetPass() {
-    const newP = document.getElementById('newPass').value;
-    const e = document.getElementById('loginEmail').value;
-    const n = document.getElementById('loginName').value;
-    if(!newP || newP.length < 4) return alert("Parolă prea scurtă.");
-    
-    google.script.run.withSuccessHandler(res => {
-        if(res.success) { alert("Salvat!"); cancelReset(); document.getElementById('loginPass').value = newP; }
-        else alert(res.message);
-    }).resetUserPassword(e, n, newP);
   }
 
   function showMenu(nume) {
@@ -322,13 +364,14 @@
   }
 
   function openApp(appName) {
+    // Aici trebuie sa decizi: Deschizi tot un link Apps Script sau alta pagina?
+    // Momentan te duce spre scriptul original ca pagina web
     const card = event.currentTarget;
     card.style.transform = "scale(0.98)";
     setTimeout(() => card.style.transform = "none", 150);
 
-    google.script.run.withSuccessHandler(url => {
-      window.top.location.href = url + '?page=' + appName;
-    }).getScriptUrl(); 
+    // Deschidem aplicatia specifica
+    window.open(`${SCRIPT_URL}?page=${appName}`, '_blank');
   }
 
   function logout() {
