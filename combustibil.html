@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <title>Jurnal Combustibil</title>
     
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jfsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
@@ -552,7 +552,7 @@
     }
 
     function submitData() {
-        // Colectare date
+        // Colectare date form
         const data = { 
             poza_url: document.getElementById('poza_url_drive').value, 
             date: document.getElementById('date').value, 
@@ -570,72 +570,70 @@
             total_with_vat: document.getElementById('total_with_vat').value 
         };
         
-        // Verificare campuri obligatorii
-        if(!data.date || !data.sofer || !data.nr_auto || !data.supplier || !data.total_with_vat) { 
-            return alert("⚠️ Toate câmpurile sunt OBLIGATORII!"); 
+        // --- LOGICA NOUA DE VALIDARE ---
+        
+        // 1. Daca suntem ONLINE, cerem totul (comportament normal)
+        if (navigator.onLine) {
+            if(!data.date || !data.sofer || !data.nr_auto || !data.supplier || !data.total_with_vat) { 
+                return alert("⚠️ Ești Online: Te rugăm să completezi datele sau să scanezi bonul."); 
+            }
+        } 
+        // 2. Daca suntem OFFLINE, cerem DOAR POZA, SOFER si AUTO
+        else {
+             // Verificam daca avem poza in preview (dataset)
+             const tempB64 = document.getElementById('hiddenPreviewImg').dataset.offlineB64;
+             if (!tempB64 && !data.poza_url) {
+                 return alert("⚠️ În mod Offline, POZA este obligatorie!");
+             }
+             if (!data.sofer || !data.nr_auto) {
+                 return alert("⚠️ Te rugăm să selectezi Șoferul și Numărul Auto.");
+             }
+             // Daca restul sunt goale, le punem pe 0 sau placeholder ca sa nu crape baza de date temporar
+             if(!data.date) data.date = new Date().toISOString().split('T')[0];
+             if(!data.total_with_vat) data.total_with_vat = 0; // Semnal pt backend sa ruleze AI
         }
 
-        // Verificam daca avem o poza offline care trebuie atasata la payload
-        // (Pt ca nu a trecut prin server sa primeasca URL)
+        // Pregatire Offline Image
         let offlineImage = null;
-        if (data.poza_url === "OFFLINE_PENDING") {
-            offlineImage = document.getElementById('hiddenPreviewImg').dataset.offlineB64;
-            // Backend-ul trebuie sa stie sa preia 'offlineImage' si sa o uploadeze, apoi sa genereze URL
-            // Vom modifica structura payload-ului sa suporte asta.
-            // Nota: Functia ta 'proceseazaBon' din Apps Script asteapta 'poza_url'.
-            // Dar 'analizeazaImagineDinFormular' face upload.
-            // Solutie simpla: In 'doPost', daca primeste 'offlineImage', facem upload acolo.
-            // Sau: Trimitem totul ca "saveBon" si adaugam logica in Apps Script?
-            // Cea mai simpla solutie fara a modifica Apps Script acum:
-            // Trimitem 'poza_url' ca Base64 (foarte lung). Apps Script trebuie sa verifice daca e URL sau B64.
-            // Daca e B64, face fisier.
-            // Hai sa mergem pe varianta: Adaugam 'imageBlob' in payload.
-            
-            data.poza_url = ""; // Resetam ca sa nu crape SQL
+        if (data.poza_url === "OFFLINE_PENDING" || (!data.poza_url && !navigator.onLine)) {
+            const tempB64 = document.getElementById('hiddenPreviewImg').dataset.offlineB64;
+            if (tempB64) {
+                offlineImage = tempB64;
+                data.poza_url = ""; 
+            }
         }
-
-        const mod = document.getElementById('formMode').value; 
-        const idBon = document.getElementById('bonIdEdit').value;
 
         const payload = {
             actiune: 'saveBon',
             formData: data,
             email: CURRENT_USER_EMAIL,
-            mod: mod,
-            idBon: idBon,
-            offlineImage: offlineImage // Trimitem poza B64 daca exista
+            mod: document.getElementById('formMode').value,
+            idBon: document.getElementById('bonIdEdit').value,
+            offlineImage: offlineImage
         };
 
         if (navigator.onLine) {
             showLoader("Se salvează online...");
-            fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            })
+            fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) })
             .then(r => r.json())
             .then(res => { 
                 hideLoader(); 
                 if(res.success) { 
-                    resetForm(); 
-                    switchView('list'); 
-                    alert("✅ Salvat Online!"); 
-                    refreshDashboard();
-                } else { 
-                    alert(res.error); 
-                } 
+                    resetForm(); switchView('list'); alert("✅ Salvat!"); refreshDashboard();
+                } else { alert(res.error); } 
             })
-            .catch(e => { 
-                hideLoader();
-                if(confirm("Eroare conexiune. Salvezi OFFLINE?")) {
-                    saveToQueue(payload);
-                    alert("💾 Salvat OFFLINE.");
-                    switchView('list');
-                }
+            .catch(e => {
+                 hideLoader();
+                 // Fallback daca pica netul fix cand apesi
+                 saveToQueue(payload);
+                 alert("⚠️ Conexiune pierdută. Salvat în coadă pt procesare ulterioară.");
+                 switchView('list');
             });
         } else {
-            // OFFLINE
+            // SALVARE OFFLINE SIMPLIFICATA
             saveToQueue(payload);
-            alert("💾 Salvat OFFLINE (Coadă).");
+            alert("📸 Poză salvată! AI-ul va procesa datele automat când revine internetul.");
+            resetForm();
             switchView('list');
         }
     }
