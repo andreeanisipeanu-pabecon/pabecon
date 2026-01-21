@@ -22,12 +22,13 @@
         background-color: var(--bg-light); 
         font-family: 'Poppins', sans-serif; 
         color: var(--text-dark); 
+        -webkit-font-smoothing: antialiased; 
         padding-top: 160px; 
         padding-bottom: 80px; 
         margin: 0;
     }
 
-    /* --- HEADER --- */
+    /* --- HEADER FIX --- */
     .fixed-header-wrapper {
         position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
         background-color: var(--bg-light);
@@ -39,25 +40,37 @@
         color: white; 
         padding: 15px 20px 50px; 
         border-radius: 0 0 30px 30px; 
-        display: flex; justify-content: space-between; align-items: center; 
+        position: relative; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
     }
     .header-title { font-weight: 700; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
     .user-pill { background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; font-size: 0.85rem; display: flex; align-items: center; gap: 5px; backdrop-filter: blur(5px); }
     
     .top-nav { 
-        display: flex; justify-content: center; gap: 10px; margin-top: -25px; margin-bottom: 10px; padding: 0 15px; 
+        display: flex; 
+        justify-content: center; 
+        gap: 10px; 
+        margin-top: -25px; 
+        margin-bottom: 10px; 
+        position: relative; 
+        padding: 0 15px;
     }
     .nav-pill-btn { 
         border: none; padding: 12px 0; border-radius: 50px; font-weight: 600; font-size: 0.9rem; 
-        box-shadow: 0 4px 10px rgba(0,0,0,0.08); transition: 0.3s; flex: 1; text-align: center; max-width: 200px; cursor: pointer; 
+        box-shadow: 0 4px 10px rgba(0,0,0,0.08); transition: 0.3s; flex: 1; text-align: center; max-width: 200px; 
+        cursor: pointer;
     }
     .nav-pill-btn.active { background: #2d3748; color: white; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.15); }
     .nav-pill-btn:not(.active) { background: white; color: #4a5568; }
+    .nav-pill-btn:not(.active):active { transform: scale(0.95); background: #f8f9fa; }
 
-    .responsive-container { width: 100%; padding: 0 15px; margin: 0 auto; }
-    @media (min-width: 768px) { .responsive-container { max-width: 95%; } }
+    .responsive-container { width: 100%; padding-right: 15px; padding-left: 15px; margin-right: auto; margin-left: auto; }
+    @media (min-width: 768px) { .responsive-container { max-width: 95%; padding-right: 40px; padding-left: 40px; } }
+    @media (min-width: 1200px) { .responsive-container { max-width: 1400px; } }
 
-    /* --- LIST DESIGN (RESTAURAT) --- */
+    /* --- ACCORDION LUNA --- */
     .accordion-item { border: none; background: transparent; margin-bottom: 15px; }
     .accordion-button { 
         border-radius: 15px !important; box-shadow: 0 2px 5px rgba(0,0,0,0.03); 
@@ -68,53 +81,120 @@
     .month-chevron { transition: transform 0.3s; }
     .accordion-button:not(.collapsed) .month-chevron { transform: rotate(180deg); }
 
+    /* --- SUB-ACCORDION SANTIER --- */
     .sub-accordion-btn {
-        background: white !important; border: 1px solid #eef2f7; margin-top: 6px; border-radius: 12px !important;
-        padding: 10px 15px; font-weight: 600; font-size: 0.85rem; color: #4a5568; width: 100%;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.02); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+        background: white !important;
+        border: 1px solid #eef2f7;
+        margin-top: 6px;
+        border-radius: 12px !important;
+        padding: 10px 15px; 
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #4a5568;
+        width: 100%;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
     }
-    .site-badge { background: var(--primary-gradient); color: white; font-size: 0.75rem; padding: 4px 12px; border-radius: 20px; font-weight: 700; }
-    .fa-chevron-down.site-chev { transition: transform 0.3s; font-size: 0.8rem; color: #a0aec0; }
-    .sub-accordion-btn[aria-expanded="true"] .site-chev { transform: rotate(180deg); color: var(--accent-color); }
+    
+    .site-name-container { justify-self: start; text-align: left; }
+    .site-badge-container { justify-self: center; }
+    .site-arrow-container { justify-self: end; }
 
-    .trip-card { 
-        background: white; border-radius: 16px; padding: 12px 18px; margin-bottom: 8px; 
-        box-shadow: 0 2px 6px rgba(0,0,0,0.03); border-left: 4px solid var(--accent-color); 
-        position: relative; cursor: pointer; transition: 0.2s; 
+    .site-badge {
+        background: var(--primary-gradient);
+        color: white;
+        font-size: 0.75rem;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-weight: 700;
     }
-    .trip-date { font-size: 0.75rem; color: var(--accent-color); font-weight: 700; text-transform: uppercase; margin-bottom: 3px; display: flex; align-items: center; gap: 5px; }
+    
+    .fa-chevron-down.site-chev { transition: transform 0.3s; font-size: 0.8rem; color: #a0aec0; }
+    .sub-accordion-btn[aria-expanded="true"] .fa-chevron-down.site-chev { transform: rotate(180deg); color: var(--accent-color); }
+
+    /* --- TRIP CARD --- */
+    .trip-card { 
+        background: white; 
+        border-radius: 16px; 
+        padding: 12px 18px; 
+        margin-bottom: 8px; 
+        box-shadow: 0 2px 6px rgba(0,0,0,0.03); 
+        border-left: 4px solid var(--accent-color); 
+        position: relative; 
+        cursor: pointer; 
+        transition: 0.2s; 
+        width: 100%;
+    }
+    .trip-card:active { transform: scale(0.98); background: #fafafa; }
+    
+    .trip-date { 
+        font-size: 0.75rem; 
+        color: var(--accent-color); 
+        font-weight: 700; 
+        text-transform: uppercase; 
+        margin-bottom: 3px; 
+        display: flex; align-items: center; gap: 5px;
+    }
     .trip-main { font-weight: 700; font-size: 0.95rem; color: #1a202c; margin-bottom: 2px; }
     .trip-sub { font-size: 0.8rem; color: #718096; display: flex; align-items: center; gap: 5px; }
-    .trip-amount { font-size: 0.95rem; font-weight: 700; color: #16a34a; position: absolute; top: 15px; right: 15px; }
+    .trip-amount { 
+        font-size: 0.95rem; 
+        font-weight: 700; 
+        color: #16a34a; 
+        position: absolute; 
+        top: 15px; 
+        right: 15px; 
+    }
 
-    /* Buton Actualizeaza (Stil Vechi) */
-    .refresh-container { display: flex; justify-content: flex-end; margin-bottom: 15px; padding-right: 5px; margin-top: 15px; }
-    .btn-refresh-custom { background-color: #edf2f7; color: #4a5568; border: none; font-weight: 600; font-size: 0.8rem; padding: 8px 18px; border-radius: 20px; transition: 0.2s; display: flex; align-items: center; gap: 5px; }
+    /* --- BUTON ACTUALIZEAZA --- */
+    .refresh-container {
+        display: flex; 
+        justify-content: flex-end; 
+        margin-bottom: 15px;
+        padding-right: 5px;
+        margin-top: 15px;
+    }
+    .btn-refresh-custom {
+        background-color: #edf2f7; 
+        color: #4a5568; 
+        border: none;
+        font-weight: 600;
+        font-size: 0.8rem; 
+        padding: 8px 18px; 
+        border-radius: 20px;
+        transition: 0.2s;
+        display: flex; align-items: center; gap: 5px;
+    }
     .btn-refresh-custom:hover { background-color: #cbd5e0; color: #2d3748; }
 
-    /* --- FORMULAR --- */
-    .form-container-width { max-width: 600px; margin: 0 auto; }
-    .form-control { border-radius: 12px; padding: 12px; border: 1px solid #e2e8f0; }
-    .form-section-title { color: var(--accent-color); font-weight: 700; margin: 20px 0 10px; font-size: 0.9rem; text-transform: uppercase; }
-    .photo-box { border: 2px dashed #cbd5e0; border-radius: 12px; padding: 15px; text-align: center; color: #a0aec0; background: #fff; cursor: pointer; transition: 0.2s; }
-    .photo-box.has-file { border-color: #16a34a; color: #16a34a; background: #f0fdf4; font-weight: 600; }
-    
-    /* Autocomplete */
-    .autocomplete-wrapper { position: relative; }
-    .autocomplete-list { position: absolute; top: 100%; left: 0; width: 100%; background: white; border-radius: 12px; max-height: 200px; overflow-y: auto; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: none; }
-    .autocomplete-item { padding: 12px; border-bottom: 1px solid #f7f7f7; cursor: pointer; }
-
-    /* Utils */
-    .hidden { display: none !important; }
-    #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); z-index:9999; display:flex; justify-content:center; align-items:center; flex-direction:column; }
-    .btn-back { background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 50px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-right: 10px; cursor: pointer; }
-    
-    /* Modal Detalii (Pastrat design curat) */
+    /* --- ALTELE --- */
     .detail-section { margin-bottom: 20px; border-bottom: 1px solid #f0f0f0; padding-bottom: 15px; }
-    .detail-section-title { font-size: 0.75rem; color: var(--accent-color); font-weight: 700; text-transform: uppercase; margin-bottom: 10px; }
+    .detail-section:last-child { border-bottom: none; }
+    .detail-section-title { font-size: 0.75rem; color: var(--accent-color); font-weight: 700; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 0.5px; }
     .detail-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; }
     .detail-label { color: #718096; font-weight: 500; text-transform: uppercase; font-size: 0.8rem; }
     .detail-val { font-weight: 600; color: #2d3748; text-align: right; max-width: 65%; }
+
+    .form-container-width { max-width: 600px; margin: 0 auto; }
+    .form-control, .form-select { border-radius: 12px; border: 1px solid #e2e8f0; padding: 12px; font-size: 0.95rem; }
+    .form-control:focus { border-color: var(--accent-color); box-shadow: 0 0 0 3px rgba(0, 97, 242, 0.1); }
+    .form-section-title { color: var(--accent-color); font-weight: 700; margin: 25px 0 10px; font-size: 0.9rem; text-transform: uppercase; }
+
+    .autocomplete-wrapper { position: relative; }
+    .autocomplete-list { position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid #eee; border-radius: 12px; max-height: 200px; overflow-y: auto; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: none; }
+    .autocomplete-item { padding: 12px; border-bottom: 1px solid #f7f7f7; font-size: 0.9rem; cursor: pointer; }
+    .autocomplete-item:hover { background: #f0f4ff; }
+    .photo-box { border: 2px dashed #cbd5e0; border-radius: 12px; padding: 15px; text-align: center; color: #a0aec0; background: #fff; cursor: pointer; }
+    .photo-box.has-file { border-color: #16a34a; color: #16a34a; background: #f0fdf4; font-weight: bold; }
+    .hidden { display: none !important; }
+    #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); z-index:9999; display:flex; justify-content:center; align-items:center; flex-direction:column; }
+    
+    /* Buton Inapoi */
+    .btn-back { background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 50px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-right: 10px; cursor: pointer; transition: 0.2s; }
+    .btn-back:hover { background: rgba(255,255,255,0.3); }
+
   </style>
 </head>
 <body>
@@ -125,24 +205,31 @@
   </div>
 
   <div id="main-app" class="hidden">
+    
     <div class="fixed-header-wrapper">
         <div class="app-header">
           <div class="d-flex align-items-center">
               <button class="btn-back" onclick="window.location.href='index.html'"><i class="fa-solid fa-arrow-left"></i></button>
-              <div class="header-title ms-2"><i class="fas fa-truck-moving"></i> Transport</div>
+              <div class="header-title">
+                  <i class="fas fa-truck-moving"></i> Transport
+              </div>
           </div>
           <div class="d-flex align-items-center gap-2">
-              <div id="netStatus" class="badge bg-success rounded-pill d-flex align-items-center gap-1 shadow-sm" style="font-size:0.75rem;">
+              <div id="netStatus" class="badge bg-success rounded-pill d-flex align-items-center gap-1 shadow-sm" style="font-size:0.75rem; transition:0.3s;">
                   <i class="fas fa-wifi"></i> <span>ONLINE</span>
               </div>
               <div class="user-pill"><i class="fas fa-user-circle"></i> <span id="userDisplay">User</span></div>
           </div>
         </div>
+
         <div class="top-nav">
            <button class="nav-pill-btn active" id="tab-list" onclick="switchView('list')">Istoric Curse</button>
            <button class="nav-pill-btn" id="tab-add" onclick="openAddScreen()">Adaugă Cursă</button>
         </div>
-        <div id="syncMessage" class="bg-warning text-dark text-center py-1 small fw-bold hidden"></div>
+        
+        <div id="syncMessage" class="bg-warning text-dark text-center py-1 small fw-bold hidden">
+            <i class="fas fa-sync fa-spin"></i> Se sincronizează datele salvate offline...
+        </div>
     </div>
 
     <div class="responsive-container">
@@ -160,9 +247,10 @@
          <div class="form-container-width">
              <form id="transportForm" onsubmit="handleSubmit(event)">
                 <input type="hidden" id="editId">
+                <input type="file" id="universalCameraInput" accept="image/*" style="display:none" onchange="processScanResult()">
                 
                 <div class="card p-3 border-0 shadow-sm mb-3">
-                  <div class="form-section-title mt-0"><i class="fa-solid fa-user-tag me-2"></i>Identificare</div>
+                  <div class="form-section-title mt-0"><i class="far fa-user-circle me-2"></i>Identificare</div>
                   <div class="mb-3">
                      <label class="small text-muted fw-bold">Șofer</label>
                      <input type="text" class="form-control bg-light fw-bold" id="sofer" readonly>
@@ -178,87 +266,71 @@
                 </div>
 
                 <div class="card p-3 border-0 shadow-sm mb-3">
-                    <div class="form-section-title d-flex justify-content-between align-items-center mt-0">
+                   <div class="form-section-title d-flex justify-content-between align-items-center mt-0">
                         <span><i class="fas fa-file-invoice me-2"></i>Documente</span>
-                    </div>
+                   </div>
 
-                    <div class="p-2 mb-3 border rounded bg-light">
-                        <h6 class="fw-bold text-primary small m-0 mb-2">AVIZ 1 (Încarcă pentru extragere date)</h6>
+                   <div class="p-2 mb-3 border rounded bg-light position-relative">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold text-primary small m-0">AVIZ 1</h6>
+                            <button type="button" class="btn btn-sm btn-primary rounded-pill fw-bold px-3" onclick="startScan('aviz1')"><i class="fas fa-camera me-1"></i> SCAN</button>
+                        </div>
+                        
+                        <div id="fieldsAviz1">
+                            <div class="row mb-2">
+                                <div class="col-6"><label class="small text-muted fw-bold">Nr Aviz</label><input type="number" class="form-control fw-bold" id="numarAviz1"></div>
+                                <div class="col-6"><label class="small text-muted fw-bold">Tone</label><input type="number" step="0.01" class="form-control fw-bold" id="toneAviz1"></div>
+                            </div>
+                        </div>
+                        
                         <div class="d-flex gap-2">
-                            <div class="photo-box flex-fill bg-white" id="box_fileAviz1" onclick="document.getElementById('fileAviz1').click()">
-                                <i class="fas fa-camera fa-lg mb-1"></i><br>Poză Aviz
-                                <input type="file" id="fileAviz1" hidden onchange="handleImageUpload(this, 'aviz1')">
-                            </div>
-                            <div class="photo-box flex-fill bg-white" id="box_fileTichet1" onclick="document.getElementById('fileTichet1').click()">
-                                <i class="fas fa-ticket-alt fa-lg mb-1"></i><br>Tichet
-                                <input type="file" id="fileTichet1" hidden onchange="previewOnly(this)">
-                            </div>
+                            <div class="photo-box flex-fill bg-white" id="box_fileAviz1" onclick="triggerPhoto('fileAviz1')"><i class="fas fa-image"></i> Poză<input type="file" id="fileAviz1" hidden onchange="previewFile(this)"></div>
+                            <div class="photo-box flex-fill bg-white" onclick="triggerPhoto('fileTichet1')"><i class="fas fa-ticket-alt"></i> Tichet<input type="file" id="fileTichet1" hidden onchange="previewFile(this)"></div>
                         </div>
-                    </div>
+                   </div>
 
-                    <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" id="checkAviz2" onchange="toggleDiv('secAviz2', this.checked)">
-                        <label class="form-check-label fw-bold small text-muted">Al doilea aviz?</label>
-                    </div>
-                    <div id="secAviz2" class="hidden p-2 mb-3 border rounded bg-light">
-                        <h6 class="fw-bold text-primary small m-0 mb-2">AVIZ 2</h6>
-                        <div class="d-flex gap-2">
-                            <div class="photo-box flex-fill bg-white" id="box_fileAviz2" onclick="document.getElementById('fileAviz2').click()">
-                                <i class="fas fa-camera"></i> Poză Aviz 2
-                                <input type="file" id="fileAviz2" hidden onchange="handleImageUpload(this, 'aviz2')">
-                            </div>
-                            <div class="photo-box flex-fill bg-white" id="box_fileTichet2" onclick="document.getElementById('fileTichet2').click()">
-                                <i class="fas fa-ticket-alt"></i> Tichet 2
-                                <input type="file" id="fileTichet2" hidden onchange="previewOnly(this)">
-                            </div>
-                        </div>
-                    </div>
+                   <div class="form-check form-switch mb-2">
+                      <input class="form-check-input" type="checkbox" id="checkAviz2" onchange="toggleDiv('secAviz2', this.checked)">
+                      <label class="form-check-label fw-bold small text-muted">Al doilea aviz?</label>
+                   </div>
+                   <div id="secAviz2" class="hidden p-2 mb-3 border rounded bg-light">
+                      <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold text-primary small m-0">AVIZ 2</h6>
+                            <button type="button" class="btn btn-sm btn-primary rounded-pill fw-bold px-3" onclick="startScan('aviz2')"><i class="fas fa-camera me-1"></i> SCAN</button>
+                      </div>
+                      <div id="fieldsAviz2" class="row mb-2">
+                         <div class="col-6"><input type="number" class="form-control" id="numarAviz2" placeholder="Nr"></div>
+                         <div class="col-6"><input type="number" step="0.01" class="form-control" id="toneAviz2" placeholder="Tone"></div>
+                      </div>
+                      <div class="photo-box bg-white" id="box_fileAviz2" onclick="triggerPhoto('fileAviz2')"><i class="fas fa-image"></i> Poză Aviz 2<input type="file" id="fileAviz2" hidden onchange="previewFile(this)"></div>
+                   </div>
 
-                    <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" id="checkDel" onchange="toggleDiv('secDel', this.checked)">
-                        <label class="form-check-label fw-bold small text-muted">Delegație?</label>
-                    </div>
-                    <div id="secDel" class="hidden p-3 bg-light rounded mb-3">
-                        <div class="photo-box bg-white" id="box_fileDelegatie" onclick="document.getElementById('fileDelegatie').click()">
-                            <i class="fas fa-user-tag"></i> Poză Delegație
-                            <input type="file" id="fileDelegatie" hidden onchange="handleImageUpload(this, 'delegatie')">
-                        </div>
-                    </div>
-                    
-                    <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" id="checkCMR" onchange="toggleDiv('secCMR', this.checked)">
-                        <label class="form-check-label fw-bold small text-muted">CMR?</label>
-                    </div>
-                    <div id="secCMR" class="hidden p-3 bg-light rounded mb-3">
-                        <div class="photo-box bg-white" id="box_fileCMR" onclick="document.getElementById('fileCMR').click()">
-                            <i class="fas fa-file"></i> Poză CMR
-                            <input type="file" id="fileCMR" hidden onchange="previewOnly(this)">
-                        </div>
-                    </div>
+                   <div class="form-check form-switch mb-2">
+                      <input class="form-check-input" type="checkbox" id="checkDel" onchange="toggleDiv('secDel', this.checked)">
+                      <label class="form-check-label fw-bold small text-muted">Delegație?</label>
+                   </div>
+                   <div id="secDel" class="hidden p-3 bg-light rounded mb-3">
+                       <div class="d-flex justify-content-end mb-2">
+                             <button type="button" class="btn btn-sm btn-primary rounded-pill fw-bold px-3" onclick="startScan('delegatie')"><i class="fas fa-camera me-1"></i> SCAN</button>
+                       </div>
+                       <div id="fieldsDelegatie"><input type="number" class="form-control mb-2" id="numarDelegatie" placeholder="Număr"></div>
+                       <div class="photo-box bg-white" id="box_fileDelegatie" onclick="triggerPhoto('fileDelegatie')"><i class="fas fa-user-tag"></i> Poză Delegație<input type="file" id="fileDelegatie" hidden onchange="previewFile(this)"></div>
+                   </div>
+
+                   <div class="form-check form-switch mb-2">
+                      <input class="form-check-input" type="checkbox" id="checkCMR" onchange="toggleDiv('secCMR', this.checked)">
+                      <label class="form-check-label fw-bold small text-muted">CMR?</label>
+                   </div>
+                   <div id="secCMR" class="hidden p-3 bg-light rounded mb-3">
+                      <div class="photo-box bg-white" onclick="triggerPhoto('fileCMR')"><i class="fas fa-file"></i> Poza CMR<input type="file" id="fileCMR" hidden onchange="previewFile(this)"></div>
+                   </div>
                 </div>
 
-                <div id="autoHiddenDetails" class="hidden">
+                <div id="fullDetailsContainer">
+                    <div class="alert alert-info small py-2"><i class="fas fa-magic me-1"></i> Date completate de AI (Online)</div>
+                    
                     <div class="card p-3 border-0 shadow-sm mb-3">
-                      <div class="form-section-title mt-0"><i class="fas fa-magic me-2"></i>Date Extrase</div>
-                      
-                      <div class="row mb-2">
-                          <div class="col-6"><label class="small text-muted fw-bold">Nr Aviz</label><input type="number" class="form-control fw-bold" id="numarAviz1"></div>
-                          <div class="col-6"><label class="small text-muted fw-bold">Tone</label><input type="number" step="0.01" class="form-control fw-bold" id="toneAviz1"></div>
-                      </div>
-
-                      <div id="fieldsAviz2" class="hidden row mb-2 bg-light p-2 rounded">
-                          <div class="col-12 small text-primary fw-bold mb-1">Aviz 2:</div>
-                          <div class="col-6"><input type="number" class="form-control" id="numarAviz2" placeholder="Nr 2"></div>
-                          <div class="col-6"><input type="number" step="0.01" class="form-control" id="toneAviz2" placeholder="Tone 2"></div>
-                      </div>
-
-                      <div id="fieldsDelegatie" class="hidden mb-2">
-                          <label class="small text-muted fw-bold">Nr. Delegație</label>
-                          <input type="number" class="form-control" id="numarDelegatie">
-                      </div>
-
-                      <hr class="my-3">
-
+                      <div class="form-section-title mt-0"><i class="far fa-calendar-alt me-2"></i>Detalii</div>
                       <div class="row">
                          <div class="col-6 mb-3"><label class="small text-muted fw-bold">Data Cursă</label><input type="date" class="form-control" id="dataTransport" required></div>
                          <input type="hidden" id="dataFacturare">
@@ -274,7 +346,8 @@
                 <div id="offlineMessage" class="hidden alert alert-warning text-center mt-3 shadow-sm border-0 rounded-4">
                     <i class="fa-solid fa-cloud-arrow-up fa-2x mb-2 text-warning"></i><br>
                     <strong>Mod Offline</strong><br>
-                    Pozele au fost salvate.<br>Apasă <b>SALVEAZĂ CURSA</b>.
+                    Doar scanează (fă poză) și apasă <b>SALVEAZĂ</b>.<br>
+                    AI-ul va completa automat datele când revine internetul.
                 </div>
 
                 <div class="card p-3 border-0 shadow-sm mb-4 text-center">
@@ -293,6 +366,7 @@
              </form>
          </div>
       </div>
+
     </div>
   </div>
 
@@ -317,6 +391,10 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+    // ==========================================
+    // 1. CONFIGURARE
+    // ==========================================
+    // !!! VERIFICĂ SĂ FIE LINK-UL TĂU ACTUALIZAT !!!
     const SCRIPT_URL = "https://script.google.com/a/macros/logissupport.ro/s/AKfycbz6Nyardm3ixuhS7jvs1Xt8Rq1pIUrtw4a8QdeLTjM9Oz5YEFgbdPAH1nD3o7Kw3sJM/exec"; 
     const OFFLINE_KEY = "transport_offline_queue";
 
@@ -325,12 +403,16 @@
     let FILE_CACHE = {};
     let USER_TRIPS = [];
     let CURRENT_TRIP_ID = null;
+    let ACTIVE_SCAN_TARGET = null;
 
-    // --- INITIALIZARE ---
+    // ==========================================
+    // 2. INITIALIZARE
+    // ==========================================
     window.onload = function() {
         try {
             showLoader("Se inițializează...");
             try { if ("Notification" in window) Notification.requestPermission(); } catch(e) {}
+
             window.addEventListener('online', updateNetworkStatus);
             window.addEventListener('offline', updateNetworkStatus);
             
@@ -342,26 +424,38 @@
                     USER_INFO.nume = u.nume;
                     document.getElementById('userDisplay').innerText = u.nume;
                     document.getElementById('main-app').classList.remove('hidden');
-                } catch (e) { throw new Error("Date utilizator corupte."); }
+                } catch (jsonErr) { throw new Error("Date user corupte."); }
                 
                 if(navigator.onLine) {
                     fetch(`${SCRIPT_URL}?actiune=getTransportDropdowns`)
-                      .then(r => r.json()).then(d => { GLOBAL_DATA = d; initApp(); })
-                      .catch(() => initApp());
-                } else initApp();
+                      .then(r => r.json())
+                      .then(d => { GLOBAL_DATA = d; initApp(); })
+                      .catch(() => { initApp(); });
+                } else {
+                    initApp(); 
+                }
                 updateNetworkStatus();
             } else {
-                hideLoader(); alert("Loghează-te prin Portal."); window.location.href = 'index.html';
+                hideLoader();
+                alert("Nu ești logat! Vei fi redirecționat.");
+                window.location.href = 'index.html';
             }
-        } catch (e) { hideLoader(); alert("Eroare: " + e.message); }
+        } catch (globalErr) {
+            hideLoader();
+            alert("Eroare Critică: " + globalErr.message);
+        }
     };
 
     function initApp() {
         try {
             const today = new Date().toISOString().split('T')[0];
-            const d = document.getElementById('dataTransport'); if(d) d.value = today;
-            const f = document.getElementById('dataFacturare'); if(f) f.value = today;
-            const s = document.getElementById('sofer'); if(s) s.value = USER_INFO.nume;
+            const dateEl = document.getElementById('dataTransport');
+            const factEl = document.getElementById('dataFacturare');
+            const soferEl = document.getElementById('sofer');
+
+            if(dateEl) dateEl.value = today;
+            if(factEl) factEl.value = today;
+            if(soferEl) soferEl.value = USER_INFO.nume;
             
             setupAutocomplete('numarAuto', 'list-numarAuto', GLOBAL_DATA.auto || []);
             setupAutocomplete('santier', 'list-santier', GLOBAL_DATA.santiere || []);
@@ -369,13 +463,71 @@
             setupAutocomplete('locDescarcare', 'list-locDescarcare', GLOBAL_DATA.locatii || []);
             setupAutocomplete('material', 'list-material', GLOBAL_DATA.materiale || []);
             
-            if(navigator.onLine) loadHistory(); else hideLoader();
-            resetForm(); // Ascunde detaliile initial
-        } catch (e) { hideLoader(); console.error(e); }
+            if(navigator.onLine) loadHistory();
+            else hideLoader();
+            
+            updateFormVisibility();
+        } catch (e) {
+            hideLoader();
+            console.error(e);
+        }
     }
 
-    // --- LOGICA IMAGINI & AI (AUTO-TRIGGER) ---
-    function handleImageUpload(input, type) {
+    // ==========================================
+    // 3. UI MANAGEMENT
+    // ==========================================
+    function updateNetworkStatus() {
+        const badge = document.getElementById('netStatus');
+        const queue = getQueue();
+        const isOnline = navigator.onLine;
+        
+        if (badge) {
+            if (isOnline) {
+                badge.className = "badge bg-success rounded-pill d-flex align-items-center gap-1 shadow-sm";
+                badge.innerHTML = `<i class="fas fa-wifi"></i> <span>ONLINE</span>`;
+                if (queue.length > 0) processQueue();
+            } else {
+                badge.className = "badge bg-danger rounded-pill d-flex align-items-center gap-1 shadow-sm";
+                badge.innerHTML = `<i class="fas fa-slash"></i> <span>OFFLINE (${queue.length})</span>`;
+            }
+        }
+        updateFormVisibility();
+    }
+
+    function updateFormVisibility() {
+        const fullDetails = document.getElementById('fullDetailsContainer');
+        const fieldsAviz1 = document.getElementById('fieldsAviz1');
+        const fieldsAviz2 = document.getElementById('fieldsAviz2');
+        const fieldsDel = document.getElementById('fieldsDelegatie');
+        const msg = document.getElementById('offlineMessage');
+        
+        if (!fullDetails) return;
+
+        if (navigator.onLine) {
+            fullDetails.classList.remove('hidden');
+            fieldsAviz1.classList.remove('hidden');
+            fieldsAviz2.classList.remove('hidden');
+            fieldsDel.classList.remove('hidden');
+            msg.classList.add('hidden');
+        } else {
+            fullDetails.classList.add('hidden');
+            fieldsAviz1.classList.add('hidden');
+            fieldsAviz2.classList.add('hidden');
+            fieldsDel.classList.add('hidden');
+            msg.classList.remove('hidden');
+        }
+    }
+
+    // ==========================================
+    // 4. LOGICA SCANARE & AI
+    // ==========================================
+    function startScan(target) {
+        ACTIVE_SCAN_TARGET = target;
+        document.getElementById('universalCameraInput').click();
+    }
+
+    function processScanResult() {
+        const input = document.getElementById('universalCameraInput');
         if (input.files.length === 0) return;
         const file = input.files[0];
         
@@ -384,7 +536,6 @@
         reader.onload = (evt) => {
             const img = new Image();
             img.onload = function() {
-                // 1. Compresie & B/W
                 const c = document.createElement('canvas'); const ctx = c.getContext('2d');
                 const max = 1600; let w = img.width; let h = img.height;
                 if (w>h){if(w>max){h*=max/w;w=max}}else{if(h>max){w*=max/h;h=max}}
@@ -397,109 +548,84 @@
                    d.data[i]=v; d.data[i+1]=v; d.data[i+2]=v;
                 }
                 ctx.putImageData(d,0,0);
-                const b64 = c.toDataURL('image/jpeg', 0.6).split(',')[1];
-
-                // 2. Salvare Cache
-                let fileKey = ""; let boxId = "";
-                if(type === 'aviz1') { fileKey = 'fileAviz1'; boxId = 'box_fileAviz1'; FILE_CACHE['aviz1_base64_temp'] = b64; }
-                else if(type === 'aviz2') { fileKey = 'fileAviz2'; boxId = 'box_fileAviz2'; }
-                else if(type === 'delegatie') { fileKey = 'fileDelegatie'; boxId = 'box_fileDelegatie'; }
                 
-                FILE_CACHE[fileKey] = b64;
-                document.getElementById(boxId).classList.add('has-file');
+                const b64 = c.toDataURL('image/jpeg', 0.6).split(',')[1];
+                
+                let fileKey = ""; let boxId = "";
+                if (ACTIVE_SCAN_TARGET === 'aviz1') { fileKey='fileAviz1'; boxId='box_fileAviz1'; }
+                else if (ACTIVE_SCAN_TARGET === 'aviz2') { fileKey='fileAviz2'; boxId='box_fileAviz2'; }
+                else if (ACTIVE_SCAN_TARGET === 'delegatie') { fileKey='fileDelegatie'; boxId='box_fileDelegatie'; }
+                
+                if(fileKey) {
+                    FILE_CACHE[fileKey] = b64;
+                    const el = document.getElementById(boxId);
+                    if(el) el.classList.add('has-file');
+                    if (ACTIVE_SCAN_TARGET === 'aviz1') FILE_CACHE['aviz1_base64_temp'] = b64;
+                }
 
-                // 3. Trigger AI (Doar Online)
                 if(navigator.onLine) {
-                    showLoader("Extragere date AI...");
+                    showLoader("Analiză AI...");
                     fetch(SCRIPT_URL, {
                         method: 'POST',
                         body: JSON.stringify({ actiune: 'analizaTransport', image: b64 })
                     })
-                    .then(r => r.json())
-                    .then(res => fillData(res, type))
-                    .catch(() => { hideLoader(); alert("Eroare AI. Introdu datele manual."); document.getElementById('autoHiddenDetails').classList.remove('hidden'); });
+                    .then(r => r.json()).then(res => fillScannedData(res))
+                    .catch((err) => { hideLoader(); alert("Eroare AI: " + err); });
                 } else {
                     hideLoader();
-                    alert("Mod Offline: Poză salvată. Apasă Salvează Cursa.");
-                    document.getElementById('offlineMessage').classList.remove('hidden');
+                    alert("📸 Poză salvată local. Sync automat la revenirea netului.");
                 }
             };
             img.src = evt.target.result;
         };
         reader.readAsDataURL(file);
+        input.value = '';
     }
 
-    function fillData(res, type) {
+    function fillScannedData(res) {
         hideLoader();
-        // Afisam detaliile indiferent de succes, ca sa poata edita
-        document.getElementById('autoHiddenDetails').classList.remove('hidden');
+        if(!res.success) { alert("Nu s-au putut extrage datele."); return; }
+        const d = res.data;
+        
+        document.getElementById('fullDetailsContainer').classList.remove('hidden');
+        document.getElementById('fieldsAviz1').classList.remove('hidden');
+        document.getElementById('fieldsAviz2').classList.remove('hidden');
+        document.getElementById('fieldsDelegatie').classList.remove('hidden');
         document.getElementById('offlineMessage').classList.add('hidden');
 
-        if(!res.success) { alert("AI nu a găsit date. Completează manual."); return; }
-        const d = res.data;
-
-        // Date Comune
-        if(d.auto && !document.getElementById('numarAuto').value) document.getElementById('numarAuto').value = d.auto.toUpperCase();
+        if(d.auto) document.getElementById('numarAuto').value = d.auto.toUpperCase();
         if(d.data) { document.getElementById('dataTransport').value = d.data; document.getElementById('dataFacturare').value = d.data; }
-
-        if(type === 'aviz1') {
+        
+        if (ACTIVE_SCAN_TARGET === 'aviz1') {
             if(d.numar) document.getElementById('numarAviz1').value = d.numar;
             if(d.tone) document.getElementById('toneAviz1').value = d.tone;
             if(d.incarcare) document.getElementById('locIncarcare').value = d.incarcare;
             if(d.descarcare) document.getElementById('locDescarcare').value = d.descarcare;
             if(d.material) document.getElementById('material').value = d.material;
         } 
-        else if(type === 'aviz2') {
-            document.getElementById('fieldsAviz2').classList.remove('hidden'); // Arata campurile aviz 2
+        else if (ACTIVE_SCAN_TARGET === 'aviz2') {
             if(d.numar) document.getElementById('numarAviz2').value = d.numar;
             if(d.tone) document.getElementById('toneAviz2').value = d.tone;
         }
-        else if(type === 'delegatie') {
-            document.getElementById('fieldsDelegatie').classList.remove('hidden');
+        else if (ACTIVE_SCAN_TARGET === 'delegatie') {
             if(d.numar) document.getElementById('numarDelegatie').value = d.numar;
         }
-        alert("✅ Date completate!");
+        alert("✅ Date extrase cu succes!");
     }
 
-    function previewOnly(input) {
-        const f = input.files[0]; if(!f) return;
-        const r = new FileReader();
-        r.onload = function(e) {
-            // Doar compresie simpla pt Tichete/CMR (fara AI)
-            const img = new Image(); img.onload = function(){
-                const c=document.createElement('canvas'); const x=c.getContext('2d');
-                let w=img.width; let h=img.height; if(w>1200){h*=1200/w;w=1200}
-                c.width=w; c.height=h; x.drawImage(img,0,0,w,h);
-                FILE_CACHE[input.id] = c.toDataURL('image/jpeg',0.7).split(',')[1];
-                input.parentElement.classList.add('has-file');
-            }; img.src = e.target.result;
-        }; r.readAsDataURL(f);
-    }
-
-    // --- UI HELPERS ---
-    function updateNetworkStatus() {
-        const badge = document.getElementById('netStatus');
-        const queue = getQueue();
-        if (navigator.onLine) {
-            badge.className = "badge bg-success rounded-pill d-flex align-items-center gap-1 shadow-sm";
-            badge.innerHTML = `<i class="fas fa-wifi"></i> <span>ONLINE</span>`;
-            if (queue.length > 0) processQueue();
-        } else {
-            badge.className = "badge bg-danger rounded-pill d-flex align-items-center gap-1 shadow-sm";
-            badge.innerHTML = `<i class="fas fa-slash"></i> <span>OFFLINE (${queue.length})</span>`;
-        }
-    }
-
-    function toggleDiv(id, s) { 
-        const el = document.getElementById(id); 
-        if(s) el.classList.remove('hidden'); else el.classList.add('hidden'); 
-    }
-
-    // --- SUBMIT ---
+    // ==========================================
+    // 5. SUBMIT & SYNC
+    // ==========================================
     function handleSubmit(e) {
        e.preventDefault();
-       if(!document.getElementById('santier').value || !document.getElementById('numarAuto').value) { alert("Completează Șantierul și Auto!"); return; }
        
+       if(!document.getElementById('santier').value || !document.getElementById('numarAuto').value) {
+           alert("Completează Șantierul și Auto!"); return;
+       }
+       if(navigator.onLine && !document.getElementById('numarAviz1').value && !FILE_CACHE['fileAviz1']) {
+           if(!FILE_CACHE['fileDelegatie']) { alert("Online: Ai nevoie de Aviz 1 sau Delegație!"); return; }
+       }
+
        const formData = {
           editId: document.getElementById('editId').value,
           dataTransport: document.getElementById('dataTransport').value || new Date().toISOString().split('T')[0],
@@ -510,26 +636,20 @@
           locIncarcare: document.getElementById('locIncarcare').value,
           locDescarcare: document.getElementById('locDescarcare').value,
           material: document.getElementById('material').value,
-          
           numarAviz1: document.getElementById('numarAviz1').value || 0,
           toneAviz1: document.getElementById('toneAviz1').value || 0,
           pozaAviz1: FILE_CACHE['fileAviz1'] || '',
           pozaTichet1: FILE_CACHE['fileTichet1'] || '',
           pozaAviz1_base64_temp: FILE_CACHE['aviz1_base64_temp'] || '',
-          
           hasAviz2: document.getElementById('checkAviz2').checked,
           numarAviz2: document.getElementById('numarAviz2').value || 0,
           toneAviz2: document.getElementById('toneAviz2').value || 0,
           pozaAviz2: FILE_CACHE['fileAviz2'] || '',
-          pozaTichet2: FILE_CACHE['fileTichet2'] || '', // NOU
-
+          hasCMR: document.getElementById('checkCMR').checked,
+          pozaCMR: FILE_CACHE['fileCMR'] || '',
           hasDelegatie: document.getElementById('checkDel').checked,
           numarDelegatie: document.getElementById('numarDelegatie').value,
           pozaDelegatie: FILE_CACHE['fileDelegatie'] || '',
-          
-          hasCMR: document.getElementById('checkCMR').checked,
-          pozaCMR: FILE_CACHE['fileCMR'] || '',
-          
           statusCursa: document.querySelector('input[name="statusCursa"]:checked').value
        };
 
@@ -542,35 +662,61 @@
               hideLoader();
               if(res.success) { alert("✅ Salvat!"); switchView('list'); }
               else alert("Eroare: " + res.message);
-           }).catch(() => { saveToQueue(payload); alert("Conexiune slabă. Salvat Offline."); switchView('list'); });
+           })
+           .catch(() => { saveToQueue(payload); alert("Conexiune slabă. Salvat Offline."); switchView('list'); });
        } else {
-           saveToQueue(payload); alert("💾 Salvat Offline."); switchView('list');
+           saveToQueue(payload);
+           alert("💾 Salvat Offline. Se va trimite automat.");
+           switchView('list');
        }
     }
 
-    // --- COADA OFFLINE ---
     function getQueue() { return JSON.parse(localStorage.getItem(OFFLINE_KEY) || "[]"); }
     function saveToQueue(payload) {
-        const queue = getQueue(); payload._tempId = Date.now(); queue.push(payload);
-        localStorage.setItem(OFFLINE_KEY, JSON.stringify(queue)); updateNetworkStatus(); resetForm();
+        const queue = getQueue();
+        payload._tempId = Date.now();
+        queue.push(payload);
+        localStorage.setItem(OFFLINE_KEY, JSON.stringify(queue));
+        updateNetworkStatus();
+        resetForm();
     }
+
     async function processQueue() {
-        const queue = getQueue(); if (queue.length === 0) return;
+        const queue = getQueue();
+        if (queue.length === 0) return;
         const syncMsg = document.getElementById('syncMessage');
-        if(syncMsg) { syncMsg.classList.remove('hidden'); syncMsg.innerHTML = `<i class="fas fa-sync fa-spin"></i> Sync offline...`; }
+        if(syncMsg) { syncMsg.classList.remove('hidden'); syncMsg.innerHTML = `<i class="fas fa-sync fa-spin"></i> Procesare offline...`; }
         const item = queue[0];
         try {
             const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(item) }).then(r=>r.json());
             if(res.success) {
-                queue.shift(); localStorage.setItem(OFFLINE_KEY, JSON.stringify(queue));
+                queue.shift();
+                localStorage.setItem(OFFLINE_KEY, JSON.stringify(queue));
+                if(item.formData && item.formData.santier) sendSyncNotification(item.formData.santier);
                 if(queue.length > 0) processQueue();
-                else { if(syncMsg) syncMsg.classList.add('hidden'); updateNetworkStatus(); alert("✅ Sincronizare completă!"); loadHistory(); }
+                else {
+                    if(syncMsg) syncMsg.classList.add('hidden');
+                    updateNetworkStatus();
+                    alert("✅ Toate datele au fost sincronizate!");
+                    loadHistory();
+                }
+            } else {
+                if(syncMsg) syncMsg.innerText = "Eroare sync...";
+                setTimeout(()=>{if(syncMsg)syncMsg.classList.add('hidden')},3000);
             }
         } catch(e) { if(syncMsg) syncMsg.classList.add('hidden'); }
     }
 
-    // --- NAVIGARE ---
+    function sendSyncNotification(santier) {
+        if (!("Notification" in window)) return;
+        if (Notification.permission === "granted") {
+            new Notification("Transport Sincronizat", { body: `Cursa ${santier} procesată.`, icon: "https://cdn-icons-png.flaticon.com/512/190/190411.png" });
+        }
+    }
+    function requestNotificationPermission() { if ("Notification" in window && Notification.permission !== "granted") Notification.requestPermission(); }
+
     function openAddScreen() { resetForm(); document.getElementById('editId').value = ""; switchView('add'); }
+    
     function switchView(view) {
         document.getElementById('view-list').classList.toggle('hidden', view !== 'list');
         document.getElementById('view-add').classList.toggle('hidden', view !== 'add');
@@ -578,30 +724,33 @@
         document.getElementById('tab-add').classList.toggle('active', view === 'add');
         if(view==='list' && navigator.onLine) loadHistory();
     }
+    
     function resetForm() {
         document.getElementById('transportForm').reset();
         document.getElementById('editId').value = "";
         document.getElementById('sofer').value = USER_INFO.nume;
-        document.getElementById('dataTransport').value = new Date().toISOString().split('T')[0];
+        const today = new Date().toISOString().split('T')[0];
+        const dateEl = document.getElementById('dataTransport');
+        if(dateEl) dateEl.value = today;
         FILE_CACHE = {};
         document.querySelectorAll('.photo-box').forEach(el => el.classList.remove('has-file'));
-        
-        // RESETEAZA VIZIBILITATEA (Ascunde detalii)
-        document.getElementById('autoHiddenDetails').classList.add('hidden');
-        document.getElementById('offlineMessage').classList.add('hidden');
-        document.getElementById('fieldsAviz2').classList.add('hidden');
-        document.getElementById('fieldsDelegatie').classList.add('hidden');
-        
-        toggleDiv('secAviz2', false); toggleDiv('secDel', false); toggleDiv('secCMR', false);
+        updateFormVisibility();
     }
 
-    // --- LIST (DESIGN ORIGINAL) ---
     function loadHistory() {
        if(!navigator.onLine) return;
        showLoader("Se actualizează...");
        fetch(`${SCRIPT_URL}?actiune=getUserTrips&sofer=${encodeURIComponent(USER_INFO.nume)}`)
-           .then(r => r.json()).then(trips => { hideLoader(); USER_TRIPS = trips; renderTrips(trips); })
-           .catch(e => { hideLoader(); console.error(e); });
+           .then(r => r.json())
+           .then(trips => {
+              hideLoader();
+              USER_TRIPS = trips;
+              renderTrips(trips);
+           })
+           .catch(e => { 
+               hideLoader(); 
+               console.error(e);
+           });
     }
     
     function renderTrips(trips) {
@@ -613,10 +762,8 @@
           let d = t.DATA_TRANSPORT; 
           try { if(typeof d==='object') d=new Date(d.value).toISOString(); else if(d.includes('T')) d=d.split('T')[0]; } catch(e){d="2024-01-01";}
           if(!d) d="2024-01-01";
-          const y = d.split('-')[0]; const m = parseInt(d.split('-')[1]); 
-          // AFISARE LUNA COMPLETA (Fix cerut)
-          const mName = new Date(d).toLocaleDateString('ro-RO', { month: 'long' }).toUpperCase();
-          const key = `${mName} ${y}`;
+          const y = d.split('-')[0]; const m = parseInt(d.split('-')[1]);
+          const key = (["","IANUARIE","FEBRUARIE","MARTIE","APRILIE","MAI","IUNIE","IULIE","AUGUST","SEPTEMBRIE","OCTOMBRIE","NOIEMBRIE","DECEMBRIE"][m]||"UNK") + " " + y;
           if(!grouped[key]) grouped[key] = []; grouped[key].push(t);
        });
 
@@ -651,20 +798,269 @@
        hideLoader();
     }
     
-    function openDetail(id) { 
-        CURRENT_TRIP_ID=id; const t=USER_TRIPS.find(x=>x.ID===id); if(!t)return;
-        let dispD = t.DATA_TRANSPORT; try { if(typeof dispD==='string'&&dispD.includes('T')) dispD=new Date(dispD).toLocaleDateString('ro'); else if (typeof dispD === 'object') dispD=new Date(dispD.value).toLocaleDateString('ro'); } catch(e){}
-        document.getElementById('detailsBody').innerHTML = `<div class="detail-section"><div class="detail-section-title">General</div><div class="detail-row"><span class="detail-label">DATĂ</span><span class="detail-val">${dispD}</span></div><div class="detail-row"><span class="detail-label">ȘOFER</span><span class="detail-val">${t.SOFER}</span></div><div class="detail-row"><span class="detail-label">AUTO</span><span class="detail-val">${t.NR_INMATRICULARE}</span></div><div class="detail-row"><span class="detail-label">STATUS</span><span class="detail-val fw-bold ${t.STATUS_CURSA=='CONFIRMATA'?'text-success':'text-danger'}">${t.STATUS_CURSA||'-'}</span></div></div><div class="detail-section"><div class="detail-section-title">Marfă</div><div class="detail-row"><span class="detail-label">ȘANTIER</span><span class="detail-val">${t.SANTIER}</span></div><div class="detail-row"><span class="detail-label">MATERIAL</span><span class="detail-val">${t.MATERIAL}</span></div><div class="detail-row"><span class="detail-label">TONE</span><span class="detail-val fw-bold text-success">${t.AVIZ_1_TONE}</span></div></div><div class="detail-section"><div class="detail-section-title">Doc</div><div class="detail-row"><span class="detail-label">AVIZ 1</span><span class="detail-val">${t.AVIZ_1_NUMAR || '-'}</span></div></div>`;
-        new bootstrap.Modal(document.getElementById('detailsModal')).show(); 
+     function openDetail(id) {
+
+       CURRENT_TRIP_ID = id;
+
+       const t = USER_TRIPS.find(x => x.ID === id);
+
+       if(!t) return;
+
+       const body = document.getElementById('detailsBody');
+
+       const detailsModal = new bootstrap.Modal(document.getElementById('detailsModal'));
+
+       const dVal = (v) => v || '-';
+
+       let displayDate = t.DATA_TRANSPORT;
+
+       try { if(typeof displayDate === 'object') displayDate = new Date(displayDate.value).toLocaleDateString('ro-RO'); 
+
+             else if(displayDate.includes('T')) displayDate = new Date(displayDate).toLocaleDateString('ro-RO');
+
+       } catch(e) {}
+
+
+
+       body.innerHTML = `
+
+         <div class="detail-section"><div class="detail-section-title">General</div><div class="detail-row"><span class="detail-label">DATĂ</span><span class="detail-val">${displayDate}</span></div><div class="detail-row"><span class="detail-label">ȘOFER</span><span class="detail-val">${dVal(t.SOFER)}</span></div><div class="detail-row"><span class="detail-label">AUTO</span><span class="detail-val">${dVal(t.NR_INMATRICULARE)}</span></div><div class="detail-row"><span class="detail-label">STATUS</span><span class="detail-val fw-bold ${t.STATUS_CURSA=='CONFIRMATA'?'text-success':'text-danger'}">${dVal(t.STATUS_CURSA)}</span></div></div>
+
+         <div class="detail-section"><div class="detail-section-title">Locație & Marfă</div><div class="detail-row"><span class="detail-label">ȘANTIER</span><span class="detail-val">${dVal(t.SANTIER)}</span></div><div class="detail-row"><span class="detail-label">MATERIAL</span><span class="detail-val">${dVal(t.MATERIAL)}</span></div><div class="detail-row"><span class="detail-label">ÎNCĂRCARE</span><span class="detail-val">${dVal(t.LOC_INCARCARE)}</span></div><div class="detail-row"><span class="detail-label">DESCĂRCARE</span><span class="detail-val">${dVal(t.LOC_DESCARCARE)}</span></div></div>
+
+         <div class="detail-section"><div class="detail-section-title">Documente</div><div class="detail-row"><span class="detail-label">AVIZ 1</span><span class="detail-val">${t.AVIZ_1_NUMAR} (${t.AVIZ_1_TONE} t)</span></div>${t.AVIZ_2 === 'DA' ? `<div class="detail-row"><span class="detail-label">AVIZ 2</span><span class="detail-val">${t.AVIZ_2_NUMAR} (${t.AVIZ_2_TONE} t)</span></div>` : ''}<div class="detail-row"><span class="detail-label">CMR</span><span class="detail-val">${t.CMR}</span></div><div class="detail-row"><span class="detail-label">DELEGAȚIE</span><span class="detail-val">${t.DELEGATIE}</span></div></div>
+
+       `;
+
+       detailsModal.show();
+
     }
-    
-    function editCurrentTrip() { if(!navigator.onLine){alert("Doar Online");return;} alert("Editare indisponibila momentan."); }
-    function deleteCurrentTrip() { if(!navigator.onLine)return; if(confirm("Stergi?")) { showLoader("..."); fetch(SCRIPT_URL, {method:'POST', body:JSON.stringify({actiune:'deleteTransport', id:CURRENT_TRIP_ID, email:USER_INFO.email})}).then(r=>r.json()).then(()=>{hideLoader(); bootstrap.Modal.getInstance(document.getElementById('detailsModal')).hide(); loadHistory();}); } }
-    function showPhotos() { const t=USER_TRIPS.find(x=>x.ID===CURRENT_TRIP_ID); if(t.AVIZ_1_POZA) window.open(t.AVIZ_1_POZA); else alert("Fara poze"); }
-    
-    function setupAutocomplete(id, listId, data) { const inp=document.getElementById(id), list=document.getElementById(listId); inp.oninput=()=>{ const v=inp.value.toLowerCase(); list.innerHTML=''; if(!v){list.style.display='none';return;} const m=data.filter(x=>x&&x.toLowerCase().includes(v)); if(m.length){list.style.display='block'; m.forEach(x=>{const d=document.createElement('div');d.className='autocomplete-item';d.innerText=x;d.onclick=()=>{inp.value=x;list.style.display='none';};list.appendChild(d);});}else list.style.display='none'; }; document.onclick=e=>{if(e.target!==inp)list.style.display='none';}; }
-    function showLoader(t) { document.getElementById('loaderText').innerText=t; document.getElementById('loader').style.display='flex'; }
-    function hideLoader() { document.getElementById('loader').style.display='none'; }
+
+
+
+    function switchView(view) {
+
+       if(view === 'list') {
+
+          document.getElementById('view-list').classList.remove('hidden');
+
+          document.getElementById('view-add').classList.add('hidden');
+
+          document.getElementById('tab-list').classList.add('active');
+
+          document.getElementById('tab-add').classList.remove('active');
+
+          document.getElementById('tab-add').innerText = "Adaugă Cursă";
+
+          if(navigator.onLine) loadHistory();
+
+       } else {
+
+          document.getElementById('view-list').classList.add('hidden');
+
+          document.getElementById('view-add').classList.remove('hidden');
+
+          document.getElementById('tab-list').classList.remove('active');
+
+          document.getElementById('tab-add').classList.add('active');
+
+          if (!document.getElementById('editId').value) resetForm();
+
+       }
+
+    }
+
+
+
+    function resetForm() {
+
+       document.getElementById('transportForm').reset();
+
+       document.getElementById('editId').value = ""; 
+
+       document.getElementById('sofer').value = USER_INFO.nume;
+
+       const today = new Date().toISOString().split('T')[0];
+
+       document.getElementById('dataTransport').value = today;
+
+       document.getElementById('dataFacturare').value = today;
+
+       FILE_CACHE = {};
+
+       document.querySelectorAll('.photo-box').forEach(el => el.classList.remove('has-file'));
+
+       document.getElementById('secAviz2').classList.add('hidden');
+
+       document.getElementById('secCMR').classList.add('hidden');
+
+       document.getElementById('secDel').classList.add('hidden');
+
+    }
+
+
+
+    function editCurrentTrip() {
+
+       if(!navigator.onLine) { alert("Editarea funcționează doar online!"); return; }
+
+       const t = USER_TRIPS.find(x => x.ID === CURRENT_TRIP_ID);
+
+       if(!t) return;
+
+       bootstrap.Modal.getInstance(document.getElementById('detailsModal')).hide();
+
+       switchView('add');
+
+       document.getElementById('tab-add').innerText = "Editare Cursă";
+
+       document.getElementById('editId').value = t.ID;
+
+       
+
+       const setVal = (id, val) => { if(document.getElementById(id)) document.getElementById(id).value = val || ''; };
+
+       const setCheck = (id, val) => { const chk = document.getElementById(id); chk.checked = (val === 'DA'); chk.onchange(); };
+
+       
+
+       let dt = t.DATA_TRANSPORT; if(typeof dt === 'object') dt = new Date(dt.value).toISOString().split('T')[0]; else if(dt.includes('T')) dt = dt.split('T')[0];
+
+       let df = t.DATA_FACTURARE; if(typeof df === 'object') df = new Date(df.value).toISOString().split('T')[0]; else if(df.includes('T')) df = df.split('T')[0];
+
+
+
+       setVal('dataTransport', dt); setVal('dataFacturare', df);
+
+       setVal('sofer', t.SOFER); setVal('numarAuto', t.NR_INMATRICULARE);
+
+       setVal('santier', t.SANTIER); setVal('locIncarcare', t.LOC_INCARCARE);
+
+       setVal('locDescarcare', t.LOC_DESCARCARE); setVal('material', t.MATERIAL);
+
+       setVal('numarAviz1', t.AVIZ_1_NUMAR); setVal('toneAviz1', t.AVIZ_1_TONE);
+
+       if(t.AVIZ_1_POZA) FILE_CACHE['fileAviz1'] = t.AVIZ_1_POZA;
+
+       if(t.TICHET_1_CANTAR_POZA) FILE_CACHE['fileTichet1'] = t.TICHET_1_CANTAR_POZA;
+
+       setCheck('checkAviz2', t.AVIZ_2); setVal('numarAviz2', t.AVIZ_2_NUMAR); setVal('toneAviz2', t.AVIZ_2_TONE);
+
+       if(t.AVIZ_2_POZA) FILE_CACHE['fileAviz2'] = t.AVIZ_2_POZA;
+
+       setCheck('checkCMR', t.CMR); if(t['CMR POZA']) FILE_CACHE['fileCMR'] = t['CMR POZA'];
+
+       setCheck('checkDel', t.DELEGATIE); setVal('numarDelegatie', t.DELEGATIE_NUMAR);
+
+       if(t.DELEGATIE_POZA) FILE_CACHE['fileDelegatie'] = t.DELEGATIE_POZA;
+
+       if(t.STATUS_CURSA === 'NECONFIRMATA') document.getElementById('statusNeconf').checked = true;
+
+       else document.getElementById('statusConf').checked = true;
+
+       for(let k in FILE_CACHE) { const input = document.getElementById(k); if(input && FILE_CACHE[k]) input.parentElement.classList.add('has-file'); }
+
+    }
+
+
+
+    function deleteCurrentTrip() {
+
+       if(!navigator.onLine) { alert("Ștergerea funcționează doar online!"); return; }
+
+       if(!confirm("Ești sigur?")) return;
+
+       showLoader("Se șterge...");
+
+       fetch(SCRIPT_URL, {
+
+           method: 'POST',
+
+           body: JSON.stringify({ actiune: 'deleteTransport', id: CURRENT_TRIP_ID, email: USER_INFO.email })
+
+       }).then(r => r.json()).then(res => {
+
+          hideLoader(); bootstrap.Modal.getInstance(document.getElementById('detailsModal')).hide(); loadHistory();
+
+       }).catch(e => { hideLoader(); alert("Eroare: " + e); });
+
+    }
+
+
+
+    function showPhotos() {
+
+        const t = USER_TRIPS.find(x => x.ID === CURRENT_TRIP_ID);
+
+        let urls = [];
+
+        if(t.AVIZ_1_POZA) urls.push(t.AVIZ_1_POZA);
+
+        if(t.TICHET_1_CANTAR_POZA) urls.push(t.TICHET_1_CANTAR_POZA);
+
+        if(t.AVIZ_2_POZA) urls.push(t.AVIZ_2_POZA);
+
+        if(t['CMR POZA']) urls.push(t['CMR POZA']);
+
+        if(t.DELEGATIE_POZA) urls.push(t.DELEGATIE_POZA);
+
+        if(urls.length === 0) alert("Nu există poze.");
+
+        else urls.forEach(u => window.open(u, '_blank'));
+
+    }
+
+
+
+    function setupAutocomplete(id, listId, data) {
+
+       const inp = document.getElementById(id);
+
+       const list = document.getElementById(listId);
+
+       const safeData = data || [];
+
+       inp.oninput = function() {
+
+          const val = this.value.toLowerCase();
+
+          list.innerHTML = '';
+
+          if(!val) { list.style.display='none'; return; }
+
+          const matches = safeData.filter(x => x && x.toLowerCase().includes(val));
+
+          if(matches.length) {
+
+             list.style.display = 'block';
+
+             matches.forEach(m => {
+
+                const d = document.createElement('div');
+
+                d.className = 'autocomplete-item'; d.innerText = m;
+
+                d.onclick = () => { inp.value = m; list.style.display='none'; };
+
+                list.appendChild(d);
+
+             });
+
+          } else list.style.display='none';
+
+       };
+
+       document.addEventListener('click', e => { if(e.target!==inp) list.style.display='none'; });
+
+    }
+
+
+
+    function toggleDiv(id, s) { const el = document.getElementById(id); if(s) el.classList.remove('hidden'); else el.classList.add('hidden'); }
+
+    function showLoader(t) { document.getElementById('loaderText').innerText = t; document.getElementById('loader').style.display = 'flex'; }
+
+    function hideLoader() { document.getElementById('loader').style.display = 'none'; }
   </script>
 </body>
 </html>
