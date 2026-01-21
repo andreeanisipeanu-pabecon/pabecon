@@ -408,16 +408,40 @@
 
     function fillData(res, type) {
         hideLoader();
-        // Afisam toate sectiunile
+        
+        // --- DEBUGGING: Arată-mi ce a venit de la server ---
+        console.log("Răspuns Server:", res);
+        
+        if(!res.success) { 
+            alert("❌ Eroare de la Server:\n" + res.error); 
+            // Fortam afisarea ca sa poti completa manual
+            revealAllFields();
+            return; 
+        }
+
+        if (!res.data) {
+            alert("❌ Serverul a răspuns cu succes, dar FĂRĂ date (JSON gol).");
+            revealAllFields();
+            return;
+        }
+
+        // Afisam un mesaj cu ce a gasit, ca sa stim ca merge
+        const d = res.data;
+        alert("✅ Date primite de la AI:\n" + JSON.stringify(d, null, 2));
+
+        // --- DE AICI E CODUL VECHI DE POPULARE ---
+        
+        // Afisam sectiunile
         revealAllFields();
         document.getElementById('offlineMessage').classList.add('hidden');
 
-        if(!res.success) { alert("AI nu a găsit date. Completează manual."); return; }
-        const d = res.data;
-
         // Date Comune
         if(d.auto && !document.getElementById('numarAuto').value) document.getElementById('numarAuto').value = d.auto.toUpperCase();
-        if(d.data) { document.getElementById('dataTransport').value = d.data; document.getElementById('dataFacturare').value = d.data; }
+        if(d.data) { 
+            // Fix format data daca e nevoie
+            document.getElementById('dataTransport').value = d.data; 
+            document.getElementById('dataFacturare').value = d.data; 
+        }
 
         if(type === 'aviz1') {
             if(d.numar) document.getElementById('numarAviz1').value = d.numar;
@@ -435,7 +459,6 @@
             document.getElementById('fieldsDelegatie').classList.remove('hidden');
             if(d.numar) document.getElementById('numarDelegatie').value = d.numar;
         }
-        alert("✅ Date completate!");
     }
 
     function revealAllFields() {
