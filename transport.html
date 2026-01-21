@@ -209,7 +209,7 @@
                     </div>
                 </div>
 
-                <div id="identificareContainer">
+                <div id="identificareContainer" class="hidden">
                     <div class="card p-3 border-0 shadow-sm mb-3">
                       <div class="form-section-title mt-0"><i class="far fa-user-circle me-2"></i>Identificare</div>
                       
@@ -368,7 +368,7 @@
         } catch (e) { hideLoader(); console.error(e); }
     }
 
-    // --- IMAGINI ---
+    // --- IMAGINI & PREVIEW ---
     function triggerInput(id, event) {
         if(event.target.classList.contains('btn-preview-overlay')) return;
         document.getElementById(id).click();
@@ -436,7 +436,7 @@
 
     function fillData(res, type) {
         hideLoader();
-        revealAllFields();
+        revealAllFields(); 
         document.getElementById('offlineMessage').classList.add('hidden');
 
         if(!res.success) { alert("AI: Nu am găsit date."); return; }
@@ -467,6 +467,7 @@
     }
 
     function revealAllFields() {
+        document.getElementById('identificareContainer').classList.remove('hidden');
         document.getElementById('fullDetailsContainer').classList.remove('hidden');
     }
 
@@ -503,14 +504,19 @@
         const divAuto = document.getElementById('divAuto');
         
         if (navigator.onLine) {
+            // ONLINE: Sofer si Auto vizibile, dar tot containerul Identificare ASCUNS pana la scanare
             divSofer.classList.remove('hidden');
             divAuto.classList.remove('hidden');
-            // Full details se controleaza de scanare, nu de retea, deci nu il fortam aici
             document.getElementById('offlineMessage').classList.add('hidden');
+            // Nota: identificareContainer e gestionat de resetForm (ascuns default) si fillData (afisat)
         } else {
+            // OFFLINE: Aratam containerul Identificare, dar ASCUNDEM Sofer/Auto
+            document.getElementById('identificareContainer').classList.remove('hidden');
             divSofer.classList.add('hidden');
             divAuto.classList.add('hidden');
-            document.getElementById('fullDetailsContainer').classList.add('hidden'); // Offline = fara detalii
+            
+            // Offline nu avem detalii AI
+            document.getElementById('fullDetailsContainer').classList.add('hidden'); 
             document.getElementById('offlineMessage').classList.remove('hidden');
         }
     }
@@ -522,10 +528,9 @@
        e.preventDefault();
        
        if(!document.getElementById('santier').value) { alert("Completează Șantierul!"); return; }
-       // Auto doar online
-       if(navigator.onLine && !document.getElementById('numarAuto').value) { alert("Completează Auto!"); return; }
        
        if(navigator.onLine) {
+           if(!document.getElementById('numarAuto').value) { alert("Completează Auto!"); return; }
            if(!document.getElementById('numarAviz1').value && !FILE_CACHE['fileAviz1']) {
                if(!FILE_CACHE['fileDelegatie']) { alert("Online: Ai nevoie de Aviz 1 sau Delegație!"); return; }
            }
@@ -622,13 +627,14 @@
             el.classList.remove('has-file');
         });
         
+        document.getElementById('identificareContainer').classList.add('hidden');
         document.getElementById('fullDetailsContainer').classList.add('hidden');
         document.getElementById('offlineMessage').classList.add('hidden');
         document.getElementById('fieldsAviz2').classList.add('hidden');
         document.getElementById('fieldsDelegatie').classList.add('hidden');
         toggleDiv('secAviz2', false); toggleDiv('secDel', false); toggleDiv('secCMR', false);
         
-        updateFormVisibility(); // Re-aplica starea corecta
+        updateFormVisibility();
     }
 
     function loadHistory() {
@@ -747,20 +753,17 @@
         bootstrap.Modal.getInstance(document.getElementById('detailsModal')).hide();
         switchView('add');
         document.getElementById('editId').value = t.ID;
-        revealAllFields();
+        
+        // La editare aratam tot
+        document.getElementById('identificareContainer').classList.remove('hidden');
+        document.getElementById('fullDetailsContainer').classList.remove('hidden');
         
         const setV = (id,v) => { if(document.getElementById(id)) document.getElementById(id).value = v || ''; };
-        
         let dt = t.DATA_TRANSPORT; if(typeof dt==='object') dt=dt.value; if(dt && dt.includes('T')) dt=dt.split('T')[0];
         setV('dataTransport', dt); setV('dataFacturare', dt);
-        setV('sofer', t.SOFER);
-        setV('numarAuto', t.NR_INMATRICULARE);
-        setV('santier', t.SANTIER);
-        setV('locIncarcare', t.LOC_INCARCARE);
-        setV('locDescarcare', t.LOC_DESCARCARE);
-        setV('material', t.MATERIAL);
-        setV('numarAviz1', t.AVIZ_1_NUMAR);
-        setV('toneAviz1', t.AVIZ_1_TONE);
+        setV('sofer', t.SOFER); setV('numarAuto', t.NR_INMATRICULARE); setV('santier', t.SANTIER);
+        setV('locIncarcare', t.LOC_INCARCARE); setV('locDescarcare', t.LOC_DESCARCARE); setV('material', t.MATERIAL);
+        setV('numarAviz1', t.AVIZ_1_NUMAR); setV('toneAviz1', t.AVIZ_1_TONE);
         
         if(t.AVIZ_1_POZA) { FILE_CACHE['fileAviz1'] = t.AVIZ_1_POZA; document.getElementById('box_fileAviz1').classList.add('has-file'); }
         if(t.TICHET_1_CANTAR_POZA) { FILE_CACHE['fileTichet1'] = t.TICHET_1_CANTAR_POZA; document.getElementById('box_fileTichet1').classList.add('has-file'); }
