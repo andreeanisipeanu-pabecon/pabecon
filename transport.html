@@ -250,7 +250,7 @@
     // ==========================================
     // 1. CONFIGURARE
     // ==========================================
-    // ATENTIE: MODIFICA LINK-UL CU CEL REAL!
+    // !!! VERIFICĂ SĂ FIE LINK-UL TĂU ACTUALIZAT DIN DEPLOY !!!
     const SCRIPT_URL = "https://script.google.com/a/macros/logissupport.ro/s/AKfycbz6Nyardm3ixuhS7jvs1Xt8Rq1pIUrtw4a8QdeLTjM9Oz5YEFgbdPAH1nD3o7Kw3sJM/exec"; 
     const OFFLINE_KEY = "transport_offline_queue";
 
@@ -262,71 +262,105 @@
     let ACTIVE_SCAN_TARGET = null;
 
     // ==========================================
-    // 2. INITIALIZARE
+    // 2. INITIALIZARE (CU PROTECȚIE LA EROARE)
     // ==========================================
     window.onload = function() {
-        showLoader("Se inițializează...");
-        requestNotificationPermission();
-        window.addEventListener('online', updateNetworkStatus);
-        window.addEventListener('offline', updateNetworkStatus);
-        
-        const savedUser = localStorage.getItem('pabecon_user');
-        if (savedUser) {
-            const u = JSON.parse(savedUser);
-            USER_INFO.email = u.email;
-            USER_INFO.nume = u.nume;
-            document.getElementById('userDisplay').innerText = u.nume;
-            document.getElementById('main-app').classList.remove('hidden');
+        try {
+            showLoader("Se inițializează...");
             
-            if(navigator.onLine) {
-                fetch(`${SCRIPT_URL}?actiune=getTransportDropdowns`)
-                  .then(r => r.json()).then(d => { GLOBAL_DATA = d; initApp(); })
-                  .catch(() => { initApp(); }); 
+            // Verificam suportul de notificari
+            try { if ("Notification" in window) Notification.requestPermission(); } catch(e) { console.log("Fara notificari"); }
+
+            // Listeneri Retea
+            window.addEventListener('online', updateNetworkStatus);
+            window.addEventListener('offline', updateNetworkStatus);
+            
+            // Verificare User Local
+            const savedUser = localStorage.getItem('pabecon_user');
+            if (savedUser) {
+                try {
+                    const u = JSON.parse(savedUser);
+                    USER_INFO.email = u.email;
+                    USER_INFO.nume = u.nume;
+                    document.getElementById('userDisplay').innerText = u.nume;
+                    document.getElementById('main-app').classList.remove('hidden');
+                } catch (jsonErr) {
+                    throw new Error("Date utilizator corupte. Te rog să te reloghezi.");
+                }
+                
+                // Incarcare Date
+                if(navigator.onLine) {
+                    fetch(`${SCRIPT_URL}?actiune=getTransportDropdowns`)
+                      .then(r => r.json())
+                      .then(d => { 
+                          GLOBAL_DATA = d; 
+                          initApp(); 
+                      })
+                      .catch(err => { 
+                          console.error("Eroare fetch dropdowns:", err);
+                          // Chiar daca pica dropdowns, pornim aplicatia
+                          initApp(); 
+                      });
+                } else {
+                    initApp(); 
+                }
+                updateNetworkStatus();
             } else {
-                initApp(); 
+                hideLoader();
+                alert("Nu ești logat! Vei fi redirecționat.");
+                window.location.href = 'index.html';
             }
-            updateNetworkStatus();
-        } else {
+        } catch (globalErr) {
             hideLoader();
-            alert("Nu ești logat!");
-            window.location.href = 'index.html';
+            alert("CRITICAL ERROR: " + globalErr.message + "\n\nÎncearcă să ștergi cache-ul sau să te reloghezi.");
+            console.error(globalErr);
+        }
+    };
+
+    function initApp() {
+        try {
+            const today = new Date().toISOString().split('T')[0];
+            const dateEl = document.getElementById('dataTransport');
+            const factEl = document.getElementById('dataFacturare');
+            const soferEl = document.getElementById('sofer');
+
+            if(dateEl) dateEl.value = today;
+            if(factEl) factEl.value = today;
+            if(soferEl) soferEl.value = USER_INFO.nume;
+            
+            setupAutocomplete('numarAuto', 'list-numarAuto', GLOBAL_DATA.auto || []);
+            setupAutocomplete('santier', 'list-santier', GLOBAL_DATA.santiere || []);
+            setupAutocomplete('locIncarcare', 'list-locIncarcare', GLOBAL_DATA.locatii || []);
+            setupAutocomplete('locDescarcare', 'list-locDescarcare', GLOBAL_DATA.locatii || []);
+            setupAutocomplete('material', 'list-material', GLOBAL_DATA.materiale || []);
+            
+            if(navigator.onLine) loadHistory();
+            else hideLoader();
+            
+            updateFormVisibility();
+        } catch (e) {
+            hideLoader();
+            alert("Eroare la initApp: " + e.message);
         }
     }
 
-    function initApp() {
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('dataTransport').value = today;
-        document.getElementById('dataFacturare').value = today;
-        document.getElementById('sofer').value = USER_INFO.nume;
-        
-        setupAutocomplete('numarAuto', 'list-numarAuto', GLOBAL_DATA.auto || []);
-        setupAutocomplete('santier', 'list-santier', GLOBAL_DATA.santiere || []);
-        setupAutocomplete('locIncarcare', 'list-locIncarcare', GLOBAL_DATA.locatii || []);
-        setupAutocomplete('locDescarcare', 'list-locDescarcare', GLOBAL_DATA.locatii || []);
-        setupAutocomplete('material', 'list-material', GLOBAL_DATA.materiale || []);
-        
-        if(navigator.onLine) loadHistory();
-        else hideLoader();
-        
-        // Initial setam vizibilitatea corecta
-        updateFormVisibility();
-    }
-
     // ==========================================
-    // 3. UI MANAGEMENT (ONLINE / OFFLINE)
+    // 3. UI MANAGEMENT
     // ==========================================
     function updateNetworkStatus() {
         const badge = document.getElementById('netStatus');
         const queue = getQueue();
         const isOnline = navigator.onLine;
         
-        if (isOnline) {
-            badge.className = "badge bg-success rounded-pill d-flex align-items-center gap-1 shadow-sm";
-            badge.innerHTML = `<i class="fas fa-wifi"></i> <span>ONLINE</span>`;
-            if (queue.length > 0) processQueue();
-        } else {
-            badge.className = "badge bg-danger rounded-pill d-flex align-items-center gap-1 shadow-sm";
-            badge.innerHTML = `<i class="fas fa-slash"></i> <span>OFFLINE (${queue.length})</span>`;
+        if (badge) {
+            if (isOnline) {
+                badge.className = "badge bg-success rounded-pill d-flex align-items-center gap-1 shadow-sm";
+                badge.innerHTML = `<i class="fas fa-wifi"></i> <span>ONLINE</span>`;
+                if (queue.length > 0) processQueue();
+            } else {
+                badge.className = "badge bg-danger rounded-pill d-flex align-items-center gap-1 shadow-sm";
+                badge.innerHTML = `<i class="fas fa-slash"></i> <span>OFFLINE (${queue.length})</span>`;
+            }
         }
         updateFormVisibility();
     }
@@ -338,15 +372,15 @@
         const fieldsDel = document.getElementById('fieldsDelegatie');
         const msg = document.getElementById('offlineMessage');
         
+        if (!fullDetails) return; // Siguranta
+
         if (navigator.onLine) {
-            // ONLINE: Aratam tot
             fullDetails.classList.remove('hidden');
             fieldsAviz1.classList.remove('hidden');
             fieldsAviz2.classList.remove('hidden');
             fieldsDel.classList.remove('hidden');
             msg.classList.add('hidden');
         } else {
-            // OFFLINE: Ascundem detaliile (Mod Shoot & Forget)
             fullDetails.classList.add('hidden');
             fieldsAviz1.classList.add('hidden');
             fieldsAviz2.classList.add('hidden');
@@ -373,12 +407,12 @@
         reader.onload = (evt) => {
             const img = new Image();
             img.onload = function() {
-                // Compresie + B/W
                 const c = document.createElement('canvas'); const ctx = c.getContext('2d');
                 const max = 1600; let w = img.width; let h = img.height;
                 if (w>h){if(w>max){h*=max/w;w=max}}else{if(h>max){w*=max/h;h=max}}
                 c.width=w; c.height=h; ctx.drawImage(img,0,0,w,h);
                 
+                // Efect B/W simplu
                 const d = ctx.getImageData(0,0,w,h);
                 for(let i=0; i<d.data.length; i+=4){
                    const avg = (d.data[i]+d.data[i+1]+d.data[i+2])/3;
@@ -389,7 +423,6 @@
                 
                 const b64 = c.toDataURL('image/jpeg', 0.6).split(',')[1];
                 
-                // SALVAM IN CACHE 
                 let fileKey = ""; let boxId = "";
                 if (ACTIVE_SCAN_TARGET === 'aviz1') { fileKey='fileAviz1'; boxId='box_fileAviz1'; }
                 else if (ACTIVE_SCAN_TARGET === 'aviz2') { fileKey='fileAviz2'; boxId='box_fileAviz2'; }
@@ -397,8 +430,8 @@
                 
                 if(fileKey) {
                     FILE_CACHE[fileKey] = b64;
-                    document.getElementById(boxId).classList.add('has-file');
-                    // Flag special pt Sync Offline AI
+                    const el = document.getElementById(boxId);
+                    if(el) el.classList.add('has-file');
                     if (ACTIVE_SCAN_TARGET === 'aviz1') FILE_CACHE['aviz1_base64_temp'] = b64;
                 }
 
@@ -409,10 +442,10 @@
                         body: JSON.stringify({ actiune: 'analizaTransport', image: b64 })
                     })
                     .then(r => r.json()).then(res => fillScannedData(res))
-                    .catch(() => { hideLoader(); alert("Eroare AI. Completează manual."); });
+                    .catch((err) => { hideLoader(); alert("Eroare AI: " + err); });
                 } else {
                     hideLoader();
-                    alert("📸 Poză salvată local.\nDatele vor fi extrase automat când revine internetul.");
+                    alert("📸 Poză salvată local. Sync automat la revenirea netului.");
                 }
             };
             img.src = evt.target.result;
@@ -426,7 +459,6 @@
         if(!res.success) { alert("Nu s-au putut extrage datele."); return; }
         const d = res.data;
         
-        // Fortam afisarea online a campurilor
         document.getElementById('fullDetailsContainer').classList.remove('hidden');
         document.getElementById('fieldsAviz1').classList.remove('hidden');
         document.getElementById('fieldsAviz2').classList.remove('hidden');
@@ -462,11 +494,12 @@
        if(!document.getElementById('santier').value || !document.getElementById('numarAuto').value) {
            alert("Completează Șantierul și Auto!"); return;
        }
+       // Verificari minime
        if(navigator.onLine && !document.getElementById('numarAviz1').value && !FILE_CACHE['fileAviz1']) {
-           alert("Online trebuie să completezi datele sau să scanezi un aviz!"); return;
-       }
-       if(!navigator.onLine && !FILE_CACHE['fileAviz1'] && !FILE_CACHE['fileDelegatie']) {
-           alert("Offline trebuie să faci măcar o poză (Aviz sau Delegație)!"); return;
+           // Allow submit without Aviz1 ONLY if Delegatie exists
+           if(!FILE_CACHE['fileDelegatie']) {
+                alert("Online: Ai nevoie de Aviz 1 sau Delegație!"); return;
+           }
        }
 
        const formData = {
@@ -510,7 +543,7 @@
               if(res.success) { alert("✅ Salvat!"); switchView('list'); }
               else alert("Eroare: " + res.message);
            })
-           .catch(() => { saveToQueue(payload); alert("Conexiune slaba. Salvat Offline."); switchView('list'); });
+           .catch(() => { saveToQueue(payload); alert("Conexiune slabă. Salvat Offline."); switchView('list'); });
        } else {
            saveToQueue(payload);
            alert("💾 Salvat Offline. Se va trimite automat.");
@@ -534,8 +567,10 @@
         if (queue.length === 0) return;
         
         const syncMsg = document.getElementById('syncMessage');
-        syncMsg.classList.remove('hidden');
-        syncMsg.innerHTML = `<i class="fas fa-sync fa-spin"></i> Se procesează ${queue.length} curse offline...`;
+        if(syncMsg) {
+            syncMsg.classList.remove('hidden');
+            syncMsg.innerHTML = `<i class="fas fa-sync fa-spin"></i> Se procesează ${queue.length} curse offline...`;
+        }
         
         const item = queue[0];
         try {
@@ -543,20 +578,20 @@
             if(res.success) {
                 queue.shift();
                 localStorage.setItem(OFFLINE_KEY, JSON.stringify(queue));
-                sendSyncNotification(item.formData.santier);
+                if(item.formData && item.formData.santier) sendSyncNotification(item.formData.santier);
                 
                 if(queue.length > 0) processQueue();
                 else {
-                    syncMsg.classList.add('hidden');
+                    if(syncMsg) syncMsg.classList.add('hidden');
                     updateNetworkStatus();
                     alert("✅ Toate datele au fost sincronizate!");
                     loadHistory();
                 }
             } else {
-                syncMsg.innerText = "Eroare sync...";
-                setTimeout(()=>syncMsg.classList.add('hidden'),3000);
+                if(syncMsg) syncMsg.innerText = "Eroare sync...";
+                setTimeout(()=>{if(syncMsg)syncMsg.classList.add('hidden')},3000);
             }
-        } catch(e) { syncMsg.classList.add('hidden'); }
+        } catch(e) { if(syncMsg) syncMsg.classList.add('hidden'); }
     }
 
     function sendSyncNotification(santier) {
@@ -567,10 +602,6 @@
                 icon: "https://cdn-icons-png.flaticon.com/512/190/190411.png"
             });
         }
-    }
-    
-    function requestNotificationPermission() {
-        if ("Notification" in window && Notification.permission !== "granted") Notification.requestPermission();
     }
 
     // --- UTILS ---
@@ -591,16 +622,20 @@
         document.getElementById('transportForm').reset();
         document.getElementById('editId').value = "";
         document.getElementById('sofer').value = USER_INFO.nume;
-        document.getElementById('dataTransport').value = new Date().toISOString().split('T')[0];
+        
+        const today = new Date().toISOString().split('T')[0];
+        const dateEl = document.getElementById('dataTransport');
+        if(dateEl) dateEl.value = today;
+        
         FILE_CACHE = {};
         document.querySelectorAll('.photo-box').forEach(el => el.classList.remove('has-file'));
         updateFormVisibility();
     }
     
-    // --- LIST RENDER (DOM Based - Sigur) ---
+    // --- LIST RENDER (DOM Based) ---
     function renderTrips(trips) {
        const container = document.getElementById('trips-container'); container.innerHTML = '';
-       if(!trips || !trips.length) { container.innerHTML = '<div class="text-center mt-5 text-muted">Nu există date.</div>'; return; }
+       if(!trips || !trips.length) { container.innerHTML = '<div class="text-center mt-5 text-muted">Nu există date.</div>'; hideLoader(); return; }
        
        const grouped = {};
        trips.forEach(t => {
@@ -632,14 +667,15 @@
               const list = sDiv.querySelector(`#list${idx}_${sIdx}`);
               
               sTrips.forEach(t => {
-                  let dispD = t.DATA_TRANSPORT; try { if(typeof dispD==='string'&&dispD.includes('T')) dispD=new Date(dispD).toLocaleDateString('ro'); } catch(e){}
+                  let dispD = t.DATA_TRANSPORT; try { if(typeof dispD==='string'&&dispD.includes('T')) dispD=new Date(dispD).toLocaleDateString('ro'); else if (typeof dispD === 'object') dispD=new Date(dispD.value).toLocaleDateString('ro');} catch(e){}
                   const card = document.createElement('div'); card.className='trip-card';
                   card.onclick = () => openDetail(t.ID);
-                  card.innerHTML = `<div class="trip-date">${dispD}</div><div class="trip-main">${t.SOFER}</div><div class="trip-sub">${t.MATERIAL} • ${t.NR_INMATRICULARE}</div><div class="trip-amount">${t.AVIZ_1_TONE} t</div>`;
+                  card.innerHTML = `<div class="trip-date">${dispD}</div><div class="trip-main">${t.SOFER}</div><div class="trip-sub">${t.MATERIAL || 'Marfă'} • ${t.NR_INMATRICULARE}</div><div class="trip-amount">${t.AVIZ_1_TONE || 0} t</div>`;
                   list.appendChild(card);
               });
           }
        }
+       hideLoader();
     }
     
     // --- HELPERS ---
@@ -649,12 +685,13 @@
         if(!t)return;
         let dispD = t.DATA_TRANSPORT; try { if(typeof dispD==='string'&&dispD.includes('T')) dispD=new Date(dispD).toLocaleDateString('ro'); else if (typeof dispD === 'object') dispD=new Date(dispD.value).toLocaleDateString('ro'); } catch(e){}
         
-        document.getElementById('detailsBody').innerHTML = `<div class="detail-section"><div class="detail-section-title">General</div><div class="detail-row"><span class="detail-label">DATĂ</span><span class="detail-val">${dispD}</span></div><div class="detail-row"><span class="detail-label">ȘOFER</span><span class="detail-val">${t.SOFER}</span></div><div class="detail-row"><span class="detail-label">AUTO</span><span class="detail-val">${t.NR_INMATRICULARE}</span></div></div><div class="detail-section"><div class="detail-section-title">Marfă</div><div class="detail-row"><span class="detail-label">ȘANTIER</span><span class="detail-val">${t.SANTIER}</span></div><div class="detail-row"><span class="detail-label">MATERIAL</span><span class="detail-val">${t.MATERIAL}</span></div><div class="detail-row"><span class="detail-label">TONE</span><span class="detail-val fw-bold text-success">${t.AVIZ_1_TONE}</span></div></div>`;
+        document.getElementById('detailsBody').innerHTML = `<div class="detail-section"><div class="detail-section-title">General</div><div class="detail-row"><span class="detail-label">DATĂ</span><span class="detail-val">${dispD}</span></div><div class="detail-row"><span class="detail-label">ȘOFER</span><span class="detail-val">${t.SOFER}</span></div><div class="detail-row"><span class="detail-label">AUTO</span><span class="detail-val">${t.NR_INMATRICULARE}</span></div></div><div class="detail-section"><div class="detail-section-title">Marfă</div><div class="detail-row"><span class="detail-label">ȘANTIER</span><span class="detail-val">${t.SANTIER}</span></div><div class="detail-row"><span class="detail-label">MATERIAL</span><span class="detail-val">${t.MATERIAL}</span></div><div class="detail-row"><span class="detail-label">TONE</span><span class="detail-val fw-bold text-success">${t.AVIZ_1_TONE}</span></div></div><div class="detail-section"><div class="detail-section-title">Doc</div><div class="detail-row"><span class="detail-label">AVIZ 1</span><span class="detail-val">${t.AVIZ_1_NUMAR || '-'}</span></div><div class="detail-row"><span class="detail-label">DELEGAȚIE</span><span class="detail-val">${t.DELEGATIE_NUMAR || '-'}</span></div></div>`;
         new bootstrap.Modal(document.getElementById('detailsModal')).show(); 
     }
-    function editCurrentTrip() { if(!navigator.onLine){alert("Doar Online");return;} alert("Editare indisponibila momentan in acest demo simplificat."); }
+    
+    function editCurrentTrip() { if(!navigator.onLine){alert("Doar Online");return;} alert("Editare indisponibila momentan."); }
     function deleteCurrentTrip() { if(!navigator.onLine)return; if(confirm("Stergi?")) { showLoader("..."); fetch(SCRIPT_URL, {method:'POST', body:JSON.stringify({actiune:'deleteTransport', id:CURRENT_TRIP_ID, email:USER_INFO.email})}).then(r=>r.json()).then(()=>{hideLoader(); bootstrap.Modal.getInstance(document.getElementById('detailsModal')).hide(); loadHistory();}); } }
-    function showPhotos() { const t=USER_TRIPS.find(x=>x.ID===CURRENT_TRIP_ID); if(t.AVIZ_1_POZA) window.open(t.AVIZ_1_POZA); else alert("Fara poze"); }
+    function showPhotos() { const t=USER_TRIPS.find(x=>x.ID===CURRENT_TRIP_ID); if(t.AVIZ_1_POZA) window.open(t.AVIZ_1_POZA); else if(t.DELEGATIE_POZA) window.open(t.DELEGATIE_POZA); else alert("Fara poze"); }
     
     function setupAutocomplete(id, listId, data) { const inp=document.getElementById(id), list=document.getElementById(listId); inp.oninput=()=>{ const v=inp.value.toLowerCase(); list.innerHTML=''; if(!v){list.style.display='none';return;} const m=data.filter(x=>x&&x.toLowerCase().includes(v)); if(m.length){list.style.display='block'; m.forEach(x=>{const d=document.createElement('div');d.className='autocomplete-item';d.innerText=x;d.onclick=()=>{inp.value=x;list.style.display='none';};list.appendChild(d);});}else list.style.display='none'; }; document.onclick=e=>{if(e.target!==inp)list.style.display='none';}; }
     function toggleDiv(id,s) { const e=document.getElementById(id); if(s)e.classList.remove('hidden'); else e.classList.add('hidden'); }
