@@ -11,56 +11,205 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   
   <style>
-    :root { --primary-gradient: linear-gradient(135deg, #0061f2 0%, #69a6ce 100%); --bg-light: #f8f9fa; --text-dark: #2d3748; --accent-color: #0061f2; }
-    body { background-color: var(--bg-light); font-family: 'Poppins', sans-serif; color: var(--text-dark); padding-top: 140px; padding-bottom: 80px; margin: 0; }
-    
-    .fixed-header-wrapper { position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; background-color: var(--bg-light); box-shadow: 0 5px 20px rgba(0,0,0,0.05); }
-    .app-header { background: var(--primary-gradient); color: white; padding: 15px 20px 50px; border-radius: 0 0 30px 30px; display: flex; justify-content: space-between; align-items: center; }
+    :root {
+      --primary-gradient: linear-gradient(135deg, #0061f2 0%, #69a6ce 100%);
+      --bg-light: #f8f9fa;
+      --text-dark: #2d3748;
+      --accent-color: #0061f2;
+    }
+
+    body { 
+        background-color: var(--bg-light); 
+        font-family: 'Poppins', sans-serif; 
+        color: var(--text-dark); 
+        -webkit-font-smoothing: antialiased; 
+        padding-top: 160px; 
+        padding-bottom: 80px; 
+        margin: 0;
+    }
+
+    /* --- HEADER FIX --- */
+    .fixed-header-wrapper {
+        position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
+        background-color: var(--bg-light);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    }
+
+    .app-header { 
+        background: var(--primary-gradient); 
+        color: white; 
+        padding: 15px 20px 50px; 
+        border-radius: 0 0 30px 30px; 
+        position: relative; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+    }
     .header-title { font-weight: 700; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
     .user-pill { background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; font-size: 0.85rem; display: flex; align-items: center; gap: 5px; backdrop-filter: blur(5px); }
-    .top-nav { display: flex; justify-content: center; gap: 10px; margin-top: -25px; margin-bottom: 10px; padding: 0 15px; }
-    .nav-pill-btn { border: none; padding: 12px 0; border-radius: 50px; font-weight: 600; font-size: 0.9rem; box-shadow: 0 4px 10px rgba(0,0,0,0.08); transition: 0.3s; flex: 1; text-align: center; max-width: 200px; cursor: pointer; }
+    
+    .top-nav { 
+        display: flex; 
+        justify-content: center; 
+        gap: 10px; 
+        margin-top: -25px; 
+        margin-bottom: 10px; 
+        position: relative; 
+        padding: 0 15px;
+    }
+    .nav-pill-btn { 
+        border: none; padding: 12px 0; border-radius: 50px; font-weight: 600; font-size: 0.9rem; 
+        box-shadow: 0 4px 10px rgba(0,0,0,0.08); transition: 0.3s; flex: 1; text-align: center; max-width: 200px; 
+        cursor: pointer;
+    }
     .nav-pill-btn.active { background: #2d3748; color: white; transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.15); }
     .nav-pill-btn:not(.active) { background: white; color: #4a5568; }
-    
-    .responsive-container { width: 100%; padding: 0 15px; margin: 0 auto; }
-    @media (min-width: 768px) { .responsive-container { max-width: 95%; } }
+    .nav-pill-btn:not(.active):active { transform: scale(0.95); background: #f8f9fa; }
 
-    /* Cards & Lists */
-    .trip-card { background: white; border-radius: 16px; padding: 12px 18px; margin-bottom: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.03); border-left: 4px solid var(--accent-color); cursor: pointer; transition: 0.2s; }
+    .responsive-container { width: 100%; padding-right: 15px; padding-left: 15px; margin-right: auto; margin-left: auto; }
+    @media (min-width: 768px) { .responsive-container { max-width: 95%; padding-right: 40px; padding-left: 40px; } }
+    @media (min-width: 1200px) { .responsive-container { max-width: 1400px; } }
+
+    /* --- ACCORDION LUNA --- */
+    .accordion-item { border: none; background: transparent; margin-bottom: 15px; }
+    
+    .accordion-button { 
+        border-radius: 15px !important; 
+        box-shadow: 0 2px 5px rgba(0,0,0,0.03); 
+        color: #4a5568; 
+        font-weight: 700; 
+        padding: 15px; 
+        background: white;
+        font-size: 1rem;
+        display: flex;
+        justify-content: space-between; 
+        align-items: center;
+    }
+    .accordion-button::after { display: none; }
+    
+    .accordion-button:not(.collapsed) { 
+        background: #eef5ff; 
+        color: var(--accent-color); 
+    }
+    .month-chevron { transition: transform 0.3s; }
+    .accordion-button:not(.collapsed) .month-chevron { transform: rotate(180deg); }
+
+    .accordion-body { padding: 10px 5px; }
+
+    /* --- SUB-ACCORDION SANTIER --- */
+    .sub-accordion-btn {
+        background: white !important;
+        border: 1px solid #eef2f7;
+        margin-top: 6px;
+        border-radius: 12px !important;
+        padding: 10px 15px; 
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #4a5568;
+        width: 100%;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+    }
+    
+    .site-name-container { justify-self: start; text-align: left; }
+    .site-badge-container { justify-self: center; }
+    .site-arrow-container { justify-self: end; }
+
+    .site-badge {
+        background: var(--primary-gradient);
+        color: white;
+        font-size: 0.75rem;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-weight: 700;
+    }
+    
+    .fa-chevron-down.site-chev { transition: transform 0.3s; font-size: 0.8rem; color: #a0aec0; }
+    .sub-accordion-btn[aria-expanded="true"] .fa-chevron-down.site-chev { transform: rotate(180deg); color: var(--accent-color); }
+
+    /* --- TRIP CARD --- */
+    .trip-card { 
+        background: white; 
+        border-radius: 16px; 
+        padding: 12px 18px; 
+        margin-bottom: 8px; 
+        box-shadow: 0 2px 6px rgba(0,0,0,0.03); 
+        border-left: 4px solid var(--accent-color); 
+        position: relative; 
+        cursor: pointer; 
+        transition: 0.2s; 
+        width: 100%;
+    }
     .trip-card:active { transform: scale(0.98); background: #fafafa; }
-    .trip-date { font-size: 0.75rem; color: var(--accent-color); font-weight: 700; text-transform: uppercase; margin-bottom: 3px; display: flex; align-items: center; gap: 5px; }
+    
+    .trip-date { 
+        font-size: 0.75rem; 
+        color: var(--accent-color); 
+        font-weight: 700; 
+        text-transform: uppercase; 
+        margin-bottom: 3px; 
+        display: flex; align-items: center; gap: 5px;
+    }
     .trip-main { font-weight: 700; font-size: 0.95rem; color: #1a202c; margin-bottom: 2px; }
     .trip-sub { font-size: 0.8rem; color: #718096; display: flex; align-items: center; gap: 5px; }
-    .trip-amount { font-size: 0.95rem; font-weight: 700; color: #16a34a; position: absolute; top: 15px; right: 15px; }
+    .trip-amount { 
+        font-size: 0.95rem; 
+        font-weight: 700; 
+        color: #16a34a; 
+        position: absolute; 
+        top: 15px; 
+        right: 15px; 
+    }
 
-    /* Form Styles */
+    /* --- BUTON ACTUALIZEAZA --- */
+    .refresh-container {
+        display: flex; 
+        justify-content: flex-end; 
+        margin-bottom: 15px;
+        padding-right: 5px;
+        margin-top: 15px;
+    }
+    .btn-refresh-custom {
+        background-color: #edf2f7; 
+        color: #4a5568; 
+        border: none;
+        font-weight: 600;
+        font-size: 0.8rem; 
+        padding: 8px 18px; 
+        border-radius: 20px;
+        transition: 0.2s;
+        display: flex; align-items: center; gap: 5px;
+    }
+    .btn-refresh-custom:hover { background-color: #cbd5e0; color: #2d3748; }
+
+    /* --- ALTELE --- */
+    .detail-section { margin-bottom: 20px; border-bottom: 1px solid #f0f0f0; padding-bottom: 15px; }
+    .detail-section:last-child { border-bottom: none; }
+    .detail-section-title { font-size: 0.75rem; color: var(--accent-color); font-weight: 700; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 0.5px; }
+    .detail-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; }
+    .detail-label { color: #718096; font-weight: 500; text-transform: uppercase; font-size: 0.8rem; }
+    .detail-val { font-weight: 600; color: #2d3748; text-align: right; max-width: 65%; }
+
     .form-container-width { max-width: 600px; margin: 0 auto; }
-    .form-control { border-radius: 12px; padding: 12px; border: 1px solid #e2e8f0; }
-    .form-section-title { color: var(--accent-color); font-weight: 700; margin: 20px 0 10px; font-size: 0.9rem; text-transform: uppercase; }
-    .photo-box { border: 2px dashed #cbd5e0; border-radius: 12px; padding: 15px; text-align: center; color: #a0aec0; background: #fff; cursor: pointer; transition: 0.2s; }
-    .photo-box.has-file { border-color: #16a34a; color: #16a34a; background: #f0fdf4; font-weight: bold; }
-    
-    /* Autocomplete */
+    .form-control, .form-select { border-radius: 12px; border: 1px solid #e2e8f0; padding: 12px; font-size: 0.95rem; }
+    .form-control:focus { border-color: var(--accent-color); box-shadow: 0 0 0 3px rgba(0, 97, 242, 0.1); }
+    .form-section-title { color: var(--accent-color); font-weight: 700; margin: 25px 0 10px; font-size: 0.9rem; text-transform: uppercase; }
+
     .autocomplete-wrapper { position: relative; }
-    .autocomplete-list { position: absolute; top: 100%; left: 0; width: 100%; background: white; border-radius: 12px; max-height: 200px; overflow-y: auto; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: none; }
-    .autocomplete-item { padding: 12px; border-bottom: 1px solid #f7f7f7; cursor: pointer; }
-    
-    /* Utils */
+    .autocomplete-list { position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid #eee; border-radius: 12px; max-height: 200px; overflow-y: auto; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: none; }
+    .autocomplete-item { padding: 12px; border-bottom: 1px solid #f7f7f7; font-size: 0.9rem; cursor: pointer; }
+    .autocomplete-item:hover { background: #f0f4ff; }
+    .photo-box { border: 2px dashed #cbd5e0; border-radius: 12px; padding: 15px; text-align: center; color: #a0aec0; background: #fff; cursor: pointer; }
+    .photo-box.has-file { border-color: #16a34a; color: #16a34a; background: #f0fdf4; font-weight: bold; }
     .hidden { display: none !important; }
     #loader { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); z-index:9999; display:flex; justify-content:center; align-items:center; flex-direction:column; }
-    .btn-back { background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 50px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-right: 10px; cursor: pointer; }
     
-    /* Accordion Custom */
-    .accordion-button { border-radius: 15px !important; margin-bottom: 5px; font-weight: 600; color: #4a5568; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
-    .accordion-button:not(.collapsed) { color: var(--accent-color); background: #eef5ff; }
-    .accordion-item { border: none; background: transparent; margin-bottom: 10px; }
-    .sub-accordion-btn { background: white; border: 1px solid #eef2f7; margin-top: 6px; border-radius: 12px !important; padding: 10px 15px; font-weight: 600; font-size: 0.85rem; color: #4a5568; width: 100%; box-shadow: 0 1px 2px rgba(0,0,0,0.02); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; }
-    
-    .site-badge { background: var(--primary-gradient); color: white; font-size: 0.75rem; padding: 4px 12px; border-radius: 20px; font-weight: 700; }
-    .site-arrow-container { justify-self: end; }
-    .fa-chevron-down.site-chev { transition: transform 0.3s; }
-    .sub-accordion-btn[aria-expanded="true"] .site-chev { transform: rotate(180deg); color: var(--accent-color); }
+    /* Buton Inapoi */
+    .btn-back { background: rgba(255,255,255,0.2); border: none; color: white; border-radius: 50px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; margin-right: 10px; cursor: pointer; transition: 0.2s; }
+    .btn-back:hover { background: rgba(255,255,255,0.3); }
+
   </style>
 </head>
 <body>
@@ -71,31 +220,39 @@
   </div>
 
   <div id="main-app" class="hidden">
+    
     <div class="fixed-header-wrapper">
         <div class="app-header">
           <div class="d-flex align-items-center">
               <button class="btn-back" onclick="window.location.href='index.html'"><i class="fa-solid fa-arrow-left"></i></button>
-              <div class="header-title ms-2"><i class="fas fa-truck-moving"></i> Transport</div>
+              <div class="header-title">
+                  <i class="fas fa-truck-moving"></i> Transport
+              </div>
           </div>
           <div class="d-flex align-items-center gap-2">
-              <div id="netStatus" class="badge bg-success rounded-pill d-flex align-items-center gap-1 shadow-sm" style="font-size:0.75rem;">
+              <div id="netStatus" class="badge bg-success rounded-pill d-flex align-items-center gap-1 shadow-sm" style="font-size:0.75rem; transition:0.3s;">
                   <i class="fas fa-wifi"></i> <span>ONLINE</span>
               </div>
               <div class="user-pill"><i class="fas fa-user-circle"></i> <span id="userDisplay">User</span></div>
           </div>
         </div>
+
         <div class="top-nav">
-           <button class="nav-pill-btn active" id="tab-list" onclick="switchView('list')">Istoric</button>
-           <button class="nav-pill-btn" id="tab-add" onclick="openAddScreen()">Adaugă</button>
+           <button class="nav-pill-btn active" id="tab-list" onclick="switchView('list')">Istoric Curse</button>
+           <button class="nav-pill-btn" id="tab-add" onclick="openAddScreen()">Adaugă Cursă</button>
         </div>
-        <div id="syncMessage" class="bg-warning text-dark text-center py-1 small fw-bold hidden"></div>
+        
+        <div id="syncMessage" class="bg-warning text-dark text-center py-1 small fw-bold hidden">
+            <i class="fas fa-sync fa-spin"></i> Se sincronizează datele salvate offline...
+        </div>
     </div>
 
     <div class="responsive-container">
+      
       <div id="view-list">
-        <div class="text-end mb-3 mt-3">
-             <button type="button" class="btn btn-sm rounded-pill btn-light border fw-bold text-secondary" onclick="loadHistory()">
-                <i class="fa-solid fa-rotate me-1"></i> Actualizează
+        <div class="refresh-container">
+             <button type="button" class="btn-refresh-custom shadow-sm" onclick="loadHistory()">
+                <i class="fa-solid fa-rotate"></i> Actualizează
              </button>
         </div>
         <div id="trips-container" class="pb-5"></div>
@@ -108,7 +265,7 @@
                 <input type="file" id="universalCameraInput" accept="image/*" style="display:none" onchange="processScanResult()">
                 
                 <div class="card p-3 border-0 shadow-sm mb-3">
-                  <div class="form-section-title mt-0"><i class="fa-solid fa-user-tag me-2"></i>Identificare</div>
+                  <div class="form-section-title mt-0"><i class="far fa-user-circle me-2"></i>Identificare</div>
                   <div class="mb-3">
                      <label class="small text-muted fw-bold">Șofer</label>
                      <input type="text" class="form-control bg-light fw-bold" id="sofer" readonly>
@@ -123,28 +280,12 @@
                   </div>
                 </div>
 
-                <div id="fullDetailsContainer">
-                    <div class="alert alert-info small py-2"><i class="fas fa-magic me-1"></i> Date completate de AI (Online)</div>
-                    
-                    <div class="card p-3 border-0 shadow-sm mb-3">
-                      <div class="row">
-                         <div class="col-6 mb-3"><label class="small text-muted fw-bold">Data Cursă</label><input type="date" class="form-control" id="dataTransport" required></div>
-                         <input type="hidden" id="dataFacturare">
-                      </div>
-                      <div class="row">
-                          <div class="col-6 mb-3"><label class="small text-muted fw-bold">Încărcare</label><div class="autocomplete-wrapper"><input type="text" class="form-control" id="locIncarcare"><div id="list-locIncarcare" class="autocomplete-list"></div></div></div>
-                          <div class="col-6 mb-3"><label class="small text-muted fw-bold">Descărcare</label><div class="autocomplete-wrapper"><input type="text" class="form-control" id="locDescarcare"><div id="list-locDescarcare" class="autocomplete-list"></div></div></div>
-                      </div>
-                      <div class="mb-3"><label class="small text-muted fw-bold">Material</label><div class="autocomplete-wrapper"><input type="text" class="form-control" id="material"><div id="list-material" class="autocomplete-list"></div></div></div>
-                    </div>
-                </div>
-
                 <div class="card p-3 border-0 shadow-sm mb-3">
-                    <div class="form-section-title d-flex justify-content-between align-items-center mt-0">
+                   <div class="form-section-title d-flex justify-content-between align-items-center mt-0">
                         <span><i class="fas fa-file-invoice me-2"></i>Documente</span>
-                    </div>
+                   </div>
 
-                    <div class="p-2 mb-3 border rounded bg-light position-relative">
+                   <div class="p-2 mb-3 border rounded bg-light position-relative">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <h6 class="fw-bold text-primary small m-0">AVIZ 1</h6>
                             <button type="button" class="btn btn-sm btn-primary rounded-pill fw-bold px-3" onclick="startScan('aviz1')"><i class="fas fa-camera me-1"></i> SCAN</button>
@@ -161,42 +302,59 @@
                             <div class="photo-box flex-fill bg-white" id="box_fileAviz1" onclick="triggerPhoto('fileAviz1')"><i class="fas fa-image"></i> Poză<input type="file" id="fileAviz1" hidden onchange="previewFile(this)"></div>
                             <div class="photo-box flex-fill bg-white" onclick="triggerPhoto('fileTichet1')"><i class="fas fa-ticket-alt"></i> Tichet<input type="file" id="fileTichet1" hidden onchange="previewFile(this)"></div>
                         </div>
-                    </div>
+                   </div>
 
-                    <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" id="checkAviz2" onchange="toggleDiv('secAviz2', this.checked)">
-                        <label class="form-check-label fw-bold small text-muted">Al doilea aviz?</label>
-                    </div>
-                    <div id="secAviz2" class="hidden p-2 mb-3 border rounded bg-light">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
+                   <div class="form-check form-switch mb-2">
+                      <input class="form-check-input" type="checkbox" id="checkAviz2" onchange="toggleDiv('secAviz2', this.checked)">
+                      <label class="form-check-label fw-bold small text-muted">Al doilea aviz?</label>
+                   </div>
+                   <div id="secAviz2" class="hidden p-2 mb-3 border rounded bg-light">
+                      <div class="d-flex justify-content-between align-items-center mb-2">
                             <h6 class="fw-bold text-primary small m-0">AVIZ 2</h6>
                             <button type="button" class="btn btn-sm btn-primary rounded-pill fw-bold px-3" onclick="startScan('aviz2')"><i class="fas fa-camera me-1"></i> SCAN</button>
-                        </div>
-                        <div id="fieldsAviz2" class="row mb-2">
-                            <div class="col-6"><input type="number" class="form-control" id="numarAviz2" placeholder="Nr"></div>
-                            <div class="col-6"><input type="number" step="0.01" class="form-control" id="toneAviz2" placeholder="Tone"></div>
-                        </div>
-                        <div class="photo-box bg-white" id="box_fileAviz2" onclick="triggerPhoto('fileAviz2')"><i class="fas fa-image"></i> Poză Aviz 2<input type="file" id="fileAviz2" hidden onchange="previewFile(this)"></div>
-                    </div>
+                      </div>
+                      <div id="fieldsAviz2" class="row mb-2">
+                         <div class="col-6"><input type="number" class="form-control" id="numarAviz2" placeholder="Nr"></div>
+                         <div class="col-6"><input type="number" step="0.01" class="form-control" id="toneAviz2" placeholder="Tone"></div>
+                      </div>
+                      <div class="photo-box bg-white" id="box_fileAviz2" onclick="triggerPhoto('fileAviz2')"><i class="fas fa-image"></i> Poză Aviz 2<input type="file" id="fileAviz2" hidden onchange="previewFile(this)"></div>
+                   </div>
 
-                    <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" id="checkDel" onchange="toggleDiv('secDel', this.checked)">
-                        <label class="form-check-label fw-bold small text-muted">Delegație?</label>
-                    </div>
-                    <div id="secDel" class="hidden p-3 bg-light rounded mb-3">
-                        <div class="d-flex justify-content-end mb-2">
+                   <div class="form-check form-switch mb-2">
+                      <input class="form-check-input" type="checkbox" id="checkDel" onchange="toggleDiv('secDel', this.checked)">
+                      <label class="form-check-label fw-bold small text-muted">Delegație?</label>
+                   </div>
+                   <div id="secDel" class="hidden p-3 bg-light rounded mb-3">
+                       <div class="d-flex justify-content-end mb-2">
                              <button type="button" class="btn btn-sm btn-primary rounded-pill fw-bold px-3" onclick="startScan('delegatie')"><i class="fas fa-camera me-1"></i> SCAN</button>
-                        </div>
-                        <div id="fieldsDelegatie"><input type="text" class="form-control mb-2" id="numarDelegatie" placeholder="Număr Delegație"></div>
-                        <div class="photo-box bg-white" id="box_fileDelegatie" onclick="triggerPhoto('fileDelegatie')"><i class="fas fa-user-tag"></i> Poză Delegație<input type="file" id="fileDelegatie" hidden onchange="previewFile(this)"></div>
-                    </div>
+                       </div>
+                       <div id="fieldsDelegatie"><input type="number" class="form-control mb-2" id="numarDelegatie" placeholder="Număr"></div>
+                       <div class="photo-box bg-white" id="box_fileDelegatie" onclick="triggerPhoto('fileDelegatie')"><i class="fas fa-user-tag"></i> Poză Delegație<input type="file" id="fileDelegatie" hidden onchange="previewFile(this)"></div>
+                   </div>
+
+                   <div class="form-check form-switch mb-2">
+                      <input class="form-check-input" type="checkbox" id="checkCMR" onchange="toggleDiv('secCMR', this.checked)">
+                      <label class="form-check-label fw-bold small text-muted">CMR?</label>
+                   </div>
+                   <div id="secCMR" class="hidden p-3 bg-light rounded mb-3">
+                      <div class="photo-box bg-white" onclick="triggerPhoto('fileCMR')"><i class="fas fa-file"></i> Poza CMR<input type="file" id="fileCMR" hidden onchange="previewFile(this)"></div>
+                   </div>
+                </div>
+
+                <div id="fullDetailsContainer">
+                    <div class="alert alert-info small py-2"><i class="fas fa-magic me-1"></i> Date completate de AI (Online)</div>
                     
-                    <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" id="checkCMR" onchange="toggleDiv('secCMR', this.checked)">
-                        <label class="form-check-label fw-bold small text-muted">CMR?</label>
-                    </div>
-                    <div id="secCMR" class="hidden p-3 bg-light rounded mb-3">
-                        <div class="photo-box bg-white" onclick="triggerPhoto('fileCMR')"><i class="fas fa-file"></i> Poza CMR<input type="file" id="fileCMR" hidden onchange="previewFile(this)"></div>
+                    <div class="card p-3 border-0 shadow-sm mb-3">
+                      <div class="form-section-title mt-0"><i class="far fa-calendar-alt me-2"></i>Detalii</div>
+                      <div class="row">
+                         <div class="col-6 mb-3"><label class="small text-muted fw-bold">Data Cursă</label><input type="date" class="form-control" id="dataTransport" required></div>
+                         <input type="hidden" id="dataFacturare">
+                      </div>
+                      <div class="row">
+                          <div class="col-6 mb-3"><label class="small text-muted fw-bold">Încărcare</label><div class="autocomplete-wrapper"><input type="text" class="form-control" id="locIncarcare"><div id="list-locIncarcare" class="autocomplete-list"></div></div></div>
+                          <div class="col-6 mb-3"><label class="small text-muted fw-bold">Descărcare</label><div class="autocomplete-wrapper"><input type="text" class="form-control" id="locDescarcare"><div id="list-locDescarcare" class="autocomplete-list"></div></div></div>
+                      </div>
+                      <div class="mb-3"><label class="small text-muted fw-bold">Material</label><div class="autocomplete-wrapper"><input type="text" class="form-control" id="material"><div id="list-material" class="autocomplete-list"></div></div></div>
                     </div>
                 </div>
 
@@ -216,13 +374,14 @@
                    </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow" style="background: var(--primary-gradient); border:none;">SALVEAZĂ CURSA</button>
+                <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold shadow">SALVEAZĂ CURSA</button>
                 <div class="text-center mt-3 mb-5">
                    <a href="#" onclick="switchView('list')" class="text-muted text-decoration-none">Anulează</a>
                 </div>
              </form>
          </div>
       </div>
+
     </div>
   </div>
 
@@ -250,7 +409,7 @@
     // ==========================================
     // 1. CONFIGURARE
     // ==========================================
-    // !!! VERIFICĂ SĂ FIE LINK-UL TĂU ACTUALIZAT DIN DEPLOY !!!
+    // !!! VERIFICĂ SĂ FIE LINK-UL TĂU ACTUALIZAT !!!
     const SCRIPT_URL = "https://script.google.com/a/macros/logissupport.ro/s/AKfycbz6Nyardm3ixuhS7jvs1Xt8Rq1pIUrtw4a8QdeLTjM9Oz5YEFgbdPAH1nD3o7Kw3sJM/exec"; 
     const OFFLINE_KEY = "transport_offline_queue";
 
@@ -262,13 +421,12 @@
     let ACTIVE_SCAN_TARGET = null;
 
     // ==========================================
-    // 2. INITIALIZARE (CU PROTECȚIE LA EROARE)
+    // 2. INITIALIZARE
     // ==========================================
     window.onload = function() {
         try {
             showLoader("Se inițializează...");
-            
-            try { if ("Notification" in window) Notification.requestPermission(); } catch(e) { console.log("Fara notificari"); }
+            try { if ("Notification" in window) Notification.requestPermission(); } catch(e) {}
 
             window.addEventListener('online', updateNetworkStatus);
             window.addEventListener('offline', updateNetworkStatus);
@@ -281,15 +439,13 @@
                     USER_INFO.nume = u.nume;
                     document.getElementById('userDisplay').innerText = u.nume;
                     document.getElementById('main-app').classList.remove('hidden');
-                } catch (jsonErr) {
-                    throw new Error("Date utilizator corupte.");
-                }
+                } catch (jsonErr) { throw new Error("Date user corupte."); }
                 
                 if(navigator.onLine) {
                     fetch(`${SCRIPT_URL}?actiune=getTransportDropdowns`)
                       .then(r => r.json())
                       .then(d => { GLOBAL_DATA = d; initApp(); })
-                      .catch(err => { console.error("Err dropdowns:", err); initApp(); });
+                      .catch(() => { initApp(); });
                 } else {
                     initApp(); 
                 }
@@ -329,7 +485,6 @@
         } catch (e) {
             hideLoader();
             console.error(e);
-            alert("Eroare initApp: " + e.message);
         }
     }
 
@@ -597,7 +752,6 @@
         updateFormVisibility();
     }
 
-    // === FUNCTIA CARE LIPSEA (LOAD HISTORY) ===
     function loadHistory() {
        if(!navigator.onLine) return;
        showLoader("Se actualizează...");
@@ -611,7 +765,6 @@
            .catch(e => { 
                hideLoader(); 
                console.error(e);
-               // Nu dam alert, doar ascundem loader-ul, poate fi doar retea lenta
            });
     }
     
@@ -680,7 +833,5 @@
     function triggerPhoto(id) { document.getElementById(id).click(); }
     function previewFile(inp) { const f=inp.files[0]; if(f){ const r=new FileReader(); r.onload=e=>{ FILE_CACHE[inp.id]=e.target.result.split(',')[1]; inp.parentElement.classList.add('has-file'); }; r.readAsDataURL(f); } }
   </script>
-</body>
-</html>
 </body>
 </html>
